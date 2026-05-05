@@ -1,0 +1,91 @@
+// ================================================================
+// 🪝  src/hooks/usePagos.js
+// Hook personalizado: centraliza estado y operaciones de pagos.
+// Cualquier pantalla puede usarlo sin repetir lógica.
+// ================================================================
+
+import { useState, useCallback } from "react";
+import * as api from "../services/api";
+
+export function usePagos() {
+  const [pagos, setPagos] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState(null);
+
+  // ── Lectura ──────────────────────────────────────────────────
+
+  const fetchPagos = useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const data = await api.getPagos();
+      setPagos(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }, []);
+
+  // ── Escritura ─────────────────────────────────────────────────
+
+  const crearPago = async (pago) => {
+    setGuardando(true);
+    setError(null);
+    try {
+      await api.createPago(pago);
+      return { ok: true };
+    } catch (e) {
+      setError(e.message);
+      return { ok: false, message: e.message };
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const actualizarPago = async (pago) => {
+    setGuardando(true);
+    setError(null);
+    try {
+      await api.updatePago(pago);
+      // Actualiza estado local sin refetch (optimistic update)
+      setPagos((prev) =>
+        prev.map((p) => (p.id === pago.id ? { ...p, ...pago } : p)),
+      );
+      return { ok: true };
+    } catch (e) {
+      setError(e.message);
+      return { ok: false, message: e.message };
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const eliminarPago = async (id) => {
+    setGuardando(true);
+    setError(null);
+    try {
+      await api.deletePago(id);
+      // Elimina del estado local inmediatamente (optimistic update)
+      setPagos((prev) => prev.filter((p) => String(p.id) !== String(id)));
+      return { ok: true };
+    } catch (e) {
+      setError(e.message);
+      return { ok: false, message: e.message };
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return {
+    pagos,
+    cargando,
+    guardando,
+    error,
+    fetchPagos,
+    crearPago,
+    actualizarPago,
+    eliminarPago,
+  };
+}
