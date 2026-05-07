@@ -1,11 +1,6 @@
-// ================================================================
-// 🪝  src/hooks/usePagos.js
-// Hook personalizado: centraliza estado y operaciones de pagos.
-// Cualquier pantalla puede usarlo sin repetir lógica.
-// ================================================================
-
 import { useState, useCallback } from "react";
 import * as api from "../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function usePagos() {
   const [pagos, setPagos] = useState([]);
@@ -16,11 +11,24 @@ export function usePagos() {
   // ── Lectura ──────────────────────────────────────────────────
 
   const fetchPagos = useCallback(async () => {
-    setCargando(true);
     setError(null);
+
+    try {
+      const cache = await AsyncStorage.getItem("@pagos_cache");
+      if (cache) {
+        setPagos(JSON.parse(cache));
+      } else {
+        setCargando(true);
+      }
+    } catch (e) {
+      console.log("Error leyendo caché", e);
+    }
+
     try {
       const data = await api.getPagos();
       setPagos(data);
+
+      await AsyncStorage.setItem("@pagos_cache", JSON.stringify(data));
     } catch (e) {
       setError(e.message);
     } finally {
