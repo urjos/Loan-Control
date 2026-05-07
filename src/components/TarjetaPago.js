@@ -4,6 +4,7 @@
 // Muestra: cliente, fecha, monto + botones Editar / Eliminar.
 // ================================================================
 
+import { MaterialIcons, Entypo } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -12,7 +13,9 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
+  Modal,
 } from "react-native";
+import ModalAlert from "./ModalAlert";
 import { colors, spacing, radius, font, shadow } from "../styles/theme";
 import { MONEDA } from "../config/constants";
 
@@ -25,25 +28,9 @@ const formatearFecha = (iso) => {
 
 export default function TarjetaPago({ pago, onEditar, onEliminar }) {
   const [eliminando, setEliminando] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const confirmarEliminacion = () => {
-    Alert.alert(
-      "¿Eliminar pago?",
-      `Pago de ${MONEDA} ${parseFloat(pago.monto).toFixed(2)} de ${pago.cliente} del ${formatearFecha(pago.fecha)}.\n\nEsta acción no se puede deshacer.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            setEliminando(true);
-            await onEliminar(pago.id);
-            setEliminando(false);
-          },
-        },
-      ],
-    );
-  };
+  const confirmarEliminacion = () => setModalVisible(true);
 
   return (
     <View style={estilos.tarjeta}>
@@ -57,7 +44,7 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
 
         <View style={estilos.info}>
           <Text style={estilos.nombreCliente}>{pago.cliente}</Text>
-          <Text style={estilos.fecha}>📅 {formatearFecha(pago.fecha)}</Text>
+          <Text style={estilos.fecha}>{formatearFecha(pago.fecha)}</Text>
           {pago.registrado_en ? (
             <Text style={estilos.timestamp}>Reg. {pago.registrado_en}</Text>
           ) : null}
@@ -78,7 +65,7 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
           onPress={() => onEditar(pago)}
           activeOpacity={0.75}
         >
-          <Text style={estilos.textoEditar}>✏️ Editar</Text>
+          <Text style={estilos.textoEditar}>Editar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -90,10 +77,39 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
           {eliminando ? (
             <ActivityIndicator size="small" color={colors.danger} />
           ) : (
-            <Text style={estilos.textoEliminar}>🗑 Eliminar</Text>
+            <Text style={estilos.textoEliminar}>Eliminar</Text>
           )}
         </TouchableOpacity>
       </View>
+      <ModalAlert
+        visible={modalVisible}
+        icono={<MaterialIcons name="warning" size={48} color={colors.danger} />}
+        titulo="¿Eliminar pago?"
+        mensaje="Esta acción no se puede deshacer."
+        botones={[
+          {
+            texto: "Cancelar",
+            onPress: () => setModalVisible(false),
+            estilo: {
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
+            estiloTexto: { color: colors.text },
+          },
+          {
+            texto: "Eliminar",
+            onPress: async () => {
+              setModalVisible(false);
+              setEliminando(true);
+              await onEliminar(pago.id);
+              setEliminando(false);
+            },
+            estilo: { backgroundColor: colors.danger },
+            estiloTexto: { color: "#FFF" },
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -150,7 +166,7 @@ const estilos = StyleSheet.create({
     marginTop: 1,
   },
   monto: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: font.black,
     color: colors.success,
   },

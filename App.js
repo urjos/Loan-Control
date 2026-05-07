@@ -13,6 +13,7 @@
 // cualquier Tab, sin que aparezca en la barra inferior.
 // ================================================================
 
+import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -54,15 +55,20 @@ function MainTabs() {
         component={RegistrarPagoScreen}
         options={{
           tabBarLabel: "Registrar Pago",
-          tabBarIcon: () => <TabIcon label="💸" />,
+          tabBarIcon: () => (
+            <MaterialIcons name="add-circle" size={28} color={colors.primary} />
+          ),
         }}
       />
+
       <Tab.Screen
         name="Historial"
         component={HistorialScreen}
         options={{
           tabBarLabel: "Historial",
-          tabBarIcon: () => <TabIcon label="📋" />,
+          tabBarIcon: () => (
+            <MaterialIcons name="history" size={28} color={colors.primary} />
+          ),
         }}
       />
     </Tab.Navigator>

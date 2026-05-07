@@ -4,6 +4,7 @@
 // Se navega aquí desde TarjetaPago al tocar "Editar".
 // ================================================================
 
+import { MaterialIcons, Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
@@ -18,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ModalAlert from "../components/ModalAlert";
 import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
 import { usePagos } from "../hooks/usePagos";
@@ -34,11 +36,17 @@ export default function EditarPagoScreen({ route, navigation }) {
   const [cliente, setCliente] = useState(pago.cliente);
   const [monto, setMonto] = useState(String(pago.monto));
   const [fecha, setFecha] = useState(pago.fecha);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
   const handleGuardar = async () => {
     const montoNum = parseFloat(monto);
     if (!monto.trim() || isNaN(montoNum) || montoNum <= 0) {
-      Alert.alert("Monto inválido", "Ingresa un monto mayor a 0.");
+      setModalData({
+        exito: false,
+        mensaje: "Ingresa un monto mayor a 0.",
+      });
+      setModalVisible(true);
       return;
     }
 
@@ -50,14 +58,14 @@ export default function EditarPagoScreen({ route, navigation }) {
     });
 
     if (resultado.ok) {
-      Alert.alert("✅ ¡Actualizado!", "El pago fue modificado correctamente.", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      setModalData({ exito: true, mensaje: "Pago actualizado correctamente." });
+      setModalVisible(true);
     } else {
-      Alert.alert(
-        "❌ Error",
-        resultado.message || "No se pudo actualizar. Verifica tu internet.",
-      );
+      setModalData({
+        exito: false,
+        mensaje: resultado.message || "Error al actualizar.",
+      });
+      setModalVisible(true);
     }
   };
 
@@ -77,7 +85,6 @@ export default function EditarPagoScreen({ route, navigation }) {
             <Text style={estilos.textoVolver}>‹ Volver</Text>
           </TouchableOpacity>
 
-          <Text style={estilos.emoji}>✏️</Text>
           <Text style={estilos.titulo}>Editar Pago</Text>
           <Text style={estilos.subtitulo}>Modifica los datos y guarda</Text>
         </View>
@@ -131,7 +138,7 @@ export default function EditarPagoScreen({ route, navigation }) {
           {guardando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={estilos.textoBoton}>Guardar cambios →</Text>
+            <Text style={estilos.textoBoton}>Guardar →</Text>
           )}
         </TouchableOpacity>
 
@@ -145,6 +152,32 @@ export default function EditarPagoScreen({ route, navigation }) {
 
         <View style={{ height: spacing.xl }} />
       </ScrollView>
+      {/* ── Modal Personalizado ── */}
+      <ModalAlert
+        visible={modalVisible}
+        icono={
+          modalData.exito ? (
+            <Feather name="edit-3" size={48} color={colors.primary} />
+          ) : (
+            <MaterialIcons name="error" size={48} color={colors.danger} />
+          )
+        }
+        titulo={modalData.exito ? "¡Editado!" : "Error"}
+        mensaje={modalData.mensaje}
+        botones={[
+          {
+            texto: "Regresar",
+            onPress: () => {
+              setModalVisible(false);
+              if (modalData.exito) navigation.goBack();
+            },
+            estilo: {
+              backgroundColor: modalData.exito ? colors.primary : colors.danger,
+            },
+            estiloTexto: { color: "#FFF" },
+          },
+        ]}
+      />
     </SafeAreaView>
   );
 }
@@ -155,10 +188,10 @@ const estilos = StyleSheet.create({
     backgroundColor: colors.background,
   },
   encabezado: {
-    alignItems: "center",
-    paddingTop: spacing.md,
+    alignItems: "right",
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   botonVolver: {
     alignSelf: "flex-start",
@@ -175,10 +208,11 @@ const estilos = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   titulo: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: font.black,
     color: colors.text,
     letterSpacing: -0.5,
+    paddingVertical: spacing.sm,
   },
   subtitulo: {
     fontSize: 13,
@@ -262,5 +296,46 @@ const estilos = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 16,
     fontWeight: font.bold,
+  },
+  // ── Estilos del Modal ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContenido: {
+    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    width: "80%",
+    ...shadow.md,
+  },
+  modalIcono: {
+    fontSize: 40,
+    marginBottom: spacing.sm,
+  },
+  modalTitulo: {
+    fontSize: 20,
+    fontWeight: font.bold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  modalMensaje: {
+    fontSize: 16,
+    color: colors.textLight,
+    textAlign: "center",
+    marginBottom: spacing.lg,
+  },
+  botonModal: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.md,
+  },
+  textoBotonModal: {
+    color: "#FFF",
+    fontWeight: font.bold,
+    fontSize: 16,
   },
 });
