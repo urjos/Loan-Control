@@ -39,9 +39,9 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopColor: colors.border,
-          paddingBottom: Platform.OS === "ios" ? 20 : 8,
-          paddingTop: 8,
+          paddingBottom: Platform.OS === "ios" ? 40 : 8,
           height: Platform.OS === "ios" ? 80 : 62,
+          height: Platform.OS === "android" ? 70 : 62,
         },
         tabBarLabelStyle: {
           fontSize: 12,

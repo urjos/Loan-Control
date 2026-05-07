@@ -5,21 +5,26 @@
 // iOS:     muestra un picker en un modal inferior.
 // ================================================================
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  View, Text, TouchableOpacity, Modal, StyleSheet,
-  Platform, SafeAreaView,
-} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { colors, spacing, radius, font, shadow } from '../styles/theme';
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  Platform,
+  SafeAreaView,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { colors, spacing, radius, font, shadow } from "../styles/theme";
 
 // Convierte Date → string 'YYYY-MM-DD'
-const toISO = (date) => date.toISOString().split('T')[0];
+const toISO = (date) => date.toISOString().split("T")[0];
 
 // Formatea 'YYYY-MM-DD' → 'DD/MM/YYYY' para mostrar
 const formatear = (iso) => {
-  if (!iso) return '—';
-  const [y, m, d] = iso.split('-');
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 };
 
@@ -27,13 +32,13 @@ export default function DatePickerField({ label, value, onChange }) {
   const [visible, setVisible] = useState(false);
 
   // La fecha actual como objeto Date (para el picker)
-  const fechaDate = value ? new Date(value + 'T12:00:00') : new Date();
+  const fechaDate = value ? new Date(value + "T12:00:00") : new Date();
 
   const handleChange = (event, selectedDate) => {
     // Android cierra el diálogo solo; iOS necesita el modal
-    if (Platform.OS === 'android') setVisible(false);
+    if (Platform.OS === "android") setVisible(false);
 
-    if (event.type === 'dismissed') return; // Usuario canceló
+    if (event.type === "dismissed") return; // Usuario canceló
     if (selectedDate) onChange(toISO(selectedDate));
   };
 
@@ -49,13 +54,12 @@ export default function DatePickerField({ label, value, onChange }) {
         onPress={() => setVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={estilos.icono}>📅</Text>
         <Text style={estilos.texto}>{formatear(value)}</Text>
         <Text style={estilos.chevron}>›</Text>
       </TouchableOpacity>
 
       {/* ── Android: DateTimePicker directo (se muestra como diálogo nativo) ── */}
-      {Platform.OS === 'android' && visible && (
+      {Platform.OS === "android" && visible && (
         <DateTimePicker
           value={fechaDate}
           mode="date"
@@ -66,7 +70,7 @@ export default function DatePickerField({ label, value, onChange }) {
       )}
 
       {/* ── iOS: Modal con picker inline + botón "Listo" ── */}
-      {Platform.OS === 'ios' && (
+      {Platform.OS === "ios" && (
         <Modal
           transparent
           visible={visible}
@@ -88,7 +92,7 @@ export default function DatePickerField({ label, value, onChange }) {
             <DateTimePicker
               value={fechaDate}
               mode="date"
-              display="inline"   // Muestra un mini-calendario completo en iOS
+              display="inline" // Muestra un mini-calendario completo en iOS
               onChange={handleChange}
               locale="es-PE"
               style={estilos.pickerIOS}
@@ -103,77 +107,77 @@ export default function DatePickerField({ label, value, onChange }) {
 
 const estilos = StyleSheet.create({
   etiqueta: {
-    fontSize:          14,
-    fontWeight:        font.bold,
-    color:             colors.text,
-    marginBottom:      spacing.sm,
+    fontSize: 14,
+    fontWeight: font.bold,
+    color: colors.text,
+    marginBottom: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   campo: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    backgroundColor:   colors.surface,
-    borderRadius:      radius.md,
-    borderWidth:       1.5,
-    borderColor:       colors.border,
-    marginHorizontal:  spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    marginHorizontal: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.md,
+    paddingVertical: spacing.md,
     ...shadow.sm,
   },
   icono: {
-    fontSize:    20,
+    fontSize: 20,
     marginRight: spacing.sm,
   },
   texto: {
-    flex:       1,
-    fontSize:   16,
+    flex: 1,
+    fontSize: 16,
     fontWeight: font.bold,
-    color:      colors.text,
+    color: colors.text,
   },
   chevron: {
-    fontSize:   22,
-    color:      colors.textLight,
+    fontSize: 22,
+    color: colors.textLight,
     fontWeight: font.bold,
   },
 
   // ── iOS Modal ──
   overlay: {
-    flex:            1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   modal: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius:  radius.lg,
+    borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     ...shadow.md,
   },
   modalHeader: {
-    flexDirection:     'row',
-    justifyContent:    'space-between',
-    alignItems:        'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   modalTitulo: {
-    fontSize:   16,
+    fontSize: 16,
     fontWeight: font.bold,
-    color:      colors.text,
+    color: colors.text,
   },
   botonListo: {
     paddingHorizontal: spacing.sm,
-    paddingVertical:   spacing.xs,
-    backgroundColor:   colors.primaryLight,
-    borderRadius:      radius.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.sm,
   },
   textoListo: {
-    color:      colors.primary,
+    color: colors.primary,
     fontWeight: font.bold,
-    fontSize:   15,
+    fontSize: 15,
   },
   pickerIOS: {
-    alignSelf: 'center',
+    alignSelf: "center",
   },
 });

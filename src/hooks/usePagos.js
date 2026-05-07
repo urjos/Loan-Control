@@ -34,7 +34,17 @@ export function usePagos() {
     setGuardando(true);
     setError(null);
     try {
-      await api.createPago(pago);
+      const respuesta = await api.createPago(pago);
+
+      setPagos((prev) => [
+        {
+          id: respuesta.id,
+          ...pago,
+          registrado_en: new Date().toLocaleString(),
+        },
+        ...prev,
+      ]);
+
       return { ok: true };
     } catch (e) {
       setError(e.message);
@@ -49,10 +59,10 @@ export function usePagos() {
     setError(null);
     try {
       await api.updatePago(pago);
-      // Actualiza estado local sin refetch (optimistic update)
       setPagos((prev) =>
         prev.map((p) => (p.id === pago.id ? { ...p, ...pago } : p)),
       );
+      print("Pago actualizado localmente:", pago);
       return { ok: true };
     } catch (e) {
       setError(e.message);
