@@ -1,8 +1,3 @@
-// ================================================================
-// 📝  src/screens/RegistrarPagoScreen.js
-// Pantalla 1: Formulario para registrar un pago nuevo.
-// ================================================================
-
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {

@@ -40,7 +40,7 @@ export function usePagos() {
         {
           id: respuesta.id,
           ...pago,
-          registrado_en: new Date().toLocaleString(),
+          registrado_en: `_ ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}`,
         },
         ...prev,
       ]);

@@ -1,13 +1,4 @@
-// ================================================================
-// ⚙️  src/config/constants.js
-// Único lugar donde cambias la URL y los nombres de clientes.
-// ================================================================
-
-// 1. Pega aquí la URL de tu Google Apps Script (de la Parte 1)
 export const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzSpu9cdJJ5TIqXDg6CnmjTopbEZ7Cu6FkYeUncCIxmuHfCvKiltKC0wX3F9GBMSbsb/exec";
-// 2. Nombres reales de los clientes de tu mamá
+  "https://script.google.com/macros/s/AKfycbx7d-lg8xAmGvfePtyEuEtEFexX3W8zDLY0AyxuWlzTWyXMKX5q1zwx5-Yc3Y4yjyiH/exec";
 export const CLIENTES = ["Vicky", "Vilma", "Julia"];
-
-// 3. Moneda local (solo visual)
 export const MONEDA = "S/";

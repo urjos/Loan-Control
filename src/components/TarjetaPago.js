@@ -1,9 +1,3 @@
-// ================================================================
-// 🃏  src/components/TarjetaPago.js
-// Tarjeta de un pago en el historial.
-// Muestra: cliente, fecha, monto + botones Editar / Eliminar.
-// ================================================================
-
 import { MaterialIcons, Entypo } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -44,12 +38,12 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
 
         <View style={estilos.info}>
           <Text style={estilos.nombreCliente}>{pago.cliente}</Text>
+
           <Text style={estilos.fecha}>
-            {formatearFecha(pago.fecha)} • {pago.metodo || "Efectivo"}
+            {formatearFecha(pago.fecha)}{" "}
+            {pago.registrado_en?.split(" ")[1] || ""} •{" "}
+            {pago.metodo || "Efectivo"}
           </Text>
-          {pago.registrado_en ? (
-            <Text style={estilos.timestamp}>Reg. {pago.registrado_en}</Text>
-          ) : null}
         </View>
 
         <Text style={estilos.monto}>

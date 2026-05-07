@@ -1,13 +1,3 @@
-// ================================================================
-// 📋  src/screens/HistorialScreen.js
-// Pantalla 2: Listado global de pagos con:
-//   · Totales por filtro
-//   · Filtro por cliente
-//   · Ordenamiento por fecha (↑↓)
-//   · Pull-to-refresh
-//   · Editar / Eliminar desde cada tarjeta
-// ================================================================
-
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useCallback, useState } from "react";
 import {
@@ -60,8 +50,9 @@ export default function HistorialScreen({ navigation }) {
   const pagosFiltrados = pagos
     .filter((p) => filtro === "Todos" || p.cliente === filtro)
     .sort((a, b) => {
-      const diff = new Date(a.fecha) - new Date(b.fecha);
-      return orden === "asc" ? diff : -diff;
+      const timeA = parseInt(String(a.id).replace("P_", "")) || 0;
+      const timeB = parseInt(String(b.id).replace("P_", "")) || 0;
+      return orden === "asc" ? timeA - timeB : timeB - timeA;
     });
 
   const totalFiltrado = pagosFiltrados.reduce(

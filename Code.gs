@@ -15,8 +15,16 @@ const COL_FECHA = 2;
 const COL_CLIENTE = 3;
 const COL_MONTO = 4;
 const COL_TIMESTAMP = 5;
+const COL_METODO = 6;
 
-const ENCABEZADOS = ["id", "fecha", "cliente", "monto", "registrado_en"];
+const ENCABEZADOS = [
+  "id",
+  "fecha",
+  "cliente",
+  "monto",
+  "registrado_en",
+  "metodo",
+];
 
 function doGet(e) {
   try {
@@ -64,7 +72,14 @@ function crearPago(p) {
   const sheet = getHoja();
   asegurarEncabezados(sheet);
   const id = "P_" + Date.now();
-  sheet.appendRow([id, p.fecha, p.cliente, Number(p.monto), ahoraLima()]);
+  sheet.appendRow([
+    id,
+    p.fecha,
+    p.cliente,
+    Number(p.monto),
+    ahoraLima(),
+    p.metodo,
+  ]);
   const fila = sheet.getLastRow();
   sheet.getRange(fila, COL_ID).setNumberFormat("@");
   sheet.getRange(fila, COL_FECHA).setNumberFormat("@");
@@ -78,6 +93,7 @@ function actualizarPago(p) {
   sheet.getRange(filaNum, COL_FECHA).setValue(p.fecha).setNumberFormat("@");
   sheet.getRange(filaNum, COL_CLIENTE).setValue(p.cliente);
   sheet.getRange(filaNum, COL_MONTO).setValue(Number(p.monto));
+  sheet.getRange(filaNum, COL_METODO).setValue(p.metodo);
   return ok({ success: true });
 }
 

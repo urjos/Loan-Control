@@ -1,9 +1,3 @@
-// ================================================================
-// ✏️  src/screens/EditarPagoScreen.js
-// Pantalla modal: permite editar los datos de un pago existente.
-// Se navega aquí desde TarjetaPago al tocar "Editar".
-// ================================================================
-
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
