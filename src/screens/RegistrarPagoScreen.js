@@ -36,6 +36,8 @@ export default function RegistrarPagoScreen() {
   const [cliente, setCliente] = useState(CLIENTES[0]);
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(hoyISO());
+  const [metodo, setMetodo] = useState("Efectivo");
+  const METODOS = ["Efectivo", "Yape", "Otro"];
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
@@ -43,6 +45,7 @@ export default function RegistrarPagoScreen() {
     setMonto("");
     setFecha(hoyISO());
     setCliente(CLIENTES[0]);
+    setMetodo("Efectivo");
   };
 
   const handleGuardar = async () => {
@@ -57,12 +60,17 @@ export default function RegistrarPagoScreen() {
       return;
     }
 
-    const resultado = await crearPago({ fecha, cliente, monto: montoNum });
+    const resultado = await crearPago({
+      fecha,
+      cliente,
+      monto: montoNum,
+      metodo,
+    });
 
     if (resultado.ok) {
       setModalData({
         exito: true,
-        mensaje: `Pago de ${MONEDA} ${montoNum.toFixed(2)} de ${cliente} registrado.`,
+        mensaje: `Pago de ${MONEDA} ${montoNum.toFixed(2)} en ${metodo} de ${cliente} registrado.`,
       });
       setModalVisible(true);
       limpiar();
@@ -114,6 +122,32 @@ export default function RegistrarPagoScreen() {
             placeholderTextColor={colors.textLight}
           />
         </View>
+        {/* ── Sección: Método de Pago ── */}
+        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+          Método de pago
+        </Text>
+        <View style={estilos.filaMetodos}>
+          {METODOS.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                estilos.chipMetodo,
+                metodo === item && estilos.chipMetodoActivo,
+              ]}
+              onPress={() => setMetodo(item)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  estilos.chipTextoMetodo,
+                  metodo === item && estilos.chipTextoMetodoActivo,
+                ]}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* ── Sección: Fecha ── */}
         <View style={{ marginTop: spacing.lg }}>
@@ -134,6 +168,7 @@ export default function RegistrarPagoScreen() {
               value={`${MONEDA} ${parseFloat(monto).toFixed(2)}`}
               highlight
             />
+            <Row label="Método:" value={metodo} />
             <Row label="Fecha:" value={fecha.split("-").reverse().join("/")} />
           </View>
         )}
@@ -304,5 +339,32 @@ const estilos = StyleSheet.create({
     fontSize: 17,
     fontWeight: font.black,
     letterSpacing: 0.3,
+  },
+  // ── Estilos Método Pago ──
+  filaMetodos: {
+    flexDirection: "row",
+    marginHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  chipMetodo: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: "center",
+  },
+  chipMetodoActivo: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipTextoMetodo: {
+    fontSize: 14,
+    fontWeight: font.bold,
+    color: colors.textMuted,
+  },
+  chipTextoMetodoActivo: {
+    color: "#FFF",
   },
 });

@@ -36,6 +36,8 @@ export default function EditarPagoScreen({ route, navigation }) {
   const [cliente, setCliente] = useState(pago.cliente);
   const [monto, setMonto] = useState(String(pago.monto));
   const [fecha, setFecha] = useState(pago.fecha);
+  const [metodo, setMetodo] = useState(pago.metodo || "Efectivo");
+  const METODOS = ["Efectivo", "Yape", "Otro"];
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
@@ -55,6 +57,7 @@ export default function EditarPagoScreen({ route, navigation }) {
       fecha,
       cliente,
       monto: montoNum,
+      metodo,
     });
 
     if (resultado.ok) {
@@ -114,6 +117,33 @@ export default function EditarPagoScreen({ route, navigation }) {
             placeholder="0.00"
             placeholderTextColor={colors.textLight}
           />
+        </View>
+
+        {/* ── Sección: Método de Pago ── */}
+        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+          Método de pago
+        </Text>
+        <View style={estilos.filaMetodos}>
+          {METODOS.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                estilos.chipMetodo,
+                metodo === item && estilos.chipMetodoActivo,
+              ]}
+              onPress={() => setMetodo(item)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  estilos.chipTextoMetodo,
+                  metodo === item && estilos.chipTextoMetodoActivo,
+                ]}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* ── Fecha ── */}
@@ -338,4 +368,29 @@ const estilos = StyleSheet.create({
     fontWeight: font.bold,
     fontSize: 16,
   },
+  // ── Estilos Método Pago ──
+  filaMetodos: {
+    flexDirection: "row",
+    marginHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  chipMetodo: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: "center",
+  },
+  chipMetodoActivo: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipTextoMetodo: {
+    fontSize: 14,
+    fontWeight: font.bold,
+    color: colors.textMuted,
+  },
+  chipTextoMetodoActivo: { color: "#FFF" },
 });

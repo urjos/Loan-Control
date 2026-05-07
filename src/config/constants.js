@@ -5,8 +5,7 @@
 
 // 1. Pega aquí la URL de tu Google Apps Script (de la Parte 1)
 export const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzpYFzUfrbNZm7aq5vrBEOC61yiHodtVbSP5PBVo4PGMXRmCds0r2DeSB3cT2yN7WAx/exec";
-
+  "https://script.google.com/macros/s/AKfycbzSpu9cdJJ5TIqXDg6CnmjTopbEZ7Cu6FkYeUncCIxmuHfCvKiltKC0wX3F9GBMSbsb/exec";
 // 2. Nombres reales de los clientes de tu mamá
 export const CLIENTES = ["Vicky", "Vilma", "Julia"];
 

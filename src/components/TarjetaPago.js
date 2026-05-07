@@ -44,7 +44,9 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
 
         <View style={estilos.info}>
           <Text style={estilos.nombreCliente}>{pago.cliente}</Text>
-          <Text style={estilos.fecha}>{formatearFecha(pago.fecha)}</Text>
+          <Text style={estilos.fecha}>
+            {formatearFecha(pago.fecha)} • {pago.metodo || "Efectivo"}
+          </Text>
           {pago.registrado_en ? (
             <Text style={estilos.timestamp}>Reg. {pago.registrado_en}</Text>
           ) : null}
