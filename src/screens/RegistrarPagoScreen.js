@@ -44,13 +44,11 @@ export default function RegistrarPagoScreen() {
   };
 
   const handleGuardar = async () => {
-    // ── Validación ──
-    const montoNum = parseFloat(monto);
-    if (!monto.trim() || isNaN(montoNum) || montoNum <= 0) {
-      setModalData({
-        exito: false,
-        mensaje: "Ingresa un monto mayor a 0.",
-      });
+    const montoNum = monto.trim() === "" ? 0 : parseFloat(monto);
+    const estado = montoNum === 0 ? "Pendiente" : "Confirmado";
+
+    if (isNaN(montoNum) || montoNum < 0) {
+      setModalData({ exito: false, mensaje: "Ingresa un monto válido." });
       setModalVisible(true);
       return;
     }
@@ -60,13 +58,22 @@ export default function RegistrarPagoScreen() {
       cliente,
       monto: montoNum,
       metodo,
+      estado,
     });
 
     if (resultado.ok) {
-      setModalData({
-        exito: true,
-        mensaje: `Pago de ${MONEDA} ${montoNum.toFixed(2)} en ${metodo} de ${cliente} registrado.`,
-      });
+      if (estado === "Pendiente") {
+        setModalData({
+          exito: true,
+          mensaje: `Pago registrado como PENDIENTE de ${cliente}. Verifica el pago posteriormente.`,
+        });
+      } else {
+        setModalData({
+          exito: true,
+          mensaje: `Pago de ${MONEDA} ${montoNum.toFixed(2)} en ${metodo} de ${cliente} registrado.`,
+        });
+      }
+
       setModalVisible(true);
       limpiar();
     } else {
@@ -79,7 +86,7 @@ export default function RegistrarPagoScreen() {
     }
   };
 
-  const montoValido = monto.trim().length > 0 && parseFloat(monto) > 0;
+  const montoValido = !isNaN(parseFloat(monto)) && parseFloat(monto) > 0;
 
   return (
     <SafeAreaView style={estilos.contenedor} edges={["top"]}>

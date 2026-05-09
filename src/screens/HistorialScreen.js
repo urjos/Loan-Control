@@ -28,24 +28,59 @@ export default function HistorialScreen({ navigation }) {
   const { pagos, cargando, guardando, fetchPagos, eliminarPago } = usePagos();
 
   const [filtro, setFiltro] = useState("Todos");
-  const [orden, setOrden] = useState("desc"); // 'asc' | 'desc'
+  const [orden, setOrden] = useState("asc"); // 'asc' | 'desc'
   const [actualizando, setActualizando] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
-  // Recarga al enfocar la pantalla (ej: al volver de Editar)
   useFocusEffect(
     useCallback(() => {
       fetchPagos();
     }, [fetchPagos]),
   );
 
-  // Pull-to-refresh
   const onRefresh = async () => {
     setActualizando(true);
     await fetchPagos();
     setActualizando(false);
   };
 
-  // ── Lógica de filtro y orden ──────────────────────────────────
+  const limpiar = () => {};
+
+  const obtenerNombreFecha = (fechaString) => {
+    if (!fechaString) return "Fecha desconocida";
+
+    // Convertir 'YYYY-MM-DD' de la base de datos a un objeto Date local
+    const [year, month, day] = fechaString.split("-");
+    const fechaPago = new Date(year, month - 1, day);
+    fechaPago.setHours(0, 0, 0, 0);
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+
+    if (fechaPago.getTime() === hoy.getTime()) return "Hoy";
+    if (fechaPago.getTime() === ayer.getTime()) return "Ayer";
+
+    return `${day}/${month}/${year}`;
+  };
+
+  const agruparPagosPorFecha = (listaPagos) => {
+    const grupos = [];
+    listaPagos.forEach((pago) => {
+      const nombreFecha = obtenerNombreFecha(pago.fecha);
+      const grupoExistente = grupos.find((g) => g.titulo === nombreFecha);
+
+      if (grupoExistente) {
+        grupoExistente.data.push(pago);
+      } else {
+        grupos.push({ titulo: nombreFecha, data: [pago] });
+      }
+    });
+    return grupos;
+  };
 
   const pagosFiltrados = pagos
     .filter((p) => filtro === "Todos" || p.cliente === filtro)
@@ -54,6 +89,8 @@ export default function HistorialScreen({ navigation }) {
       const timeB = parseInt(String(b.id).replace("P_", "")) || 0;
       return orden === "asc" ? timeA - timeB : timeB - timeA;
     });
+
+  const datosAgrupados = agruparPagosPorFecha(pagosFiltrados);
 
   const totalFiltrado = pagosFiltrados.reduce(
     (s, p) => s + parseFloat(p.monto || 0),
@@ -91,7 +128,30 @@ export default function HistorialScreen({ navigation }) {
 
   const toggleOrden = () => setOrden((o) => (o === "desc" ? "asc" : "desc"));
 
-  // ── Render ────────────────────────────────────────────────────
+  const renderItem = ({ item }) => {
+    // Si el item es un string, es un encabezado de fecha
+    if (typeof item === "string") {
+      return (
+        <View style={estilos.contenedorFecha}>
+          <Text style={estilos.textoFecha}>{item}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <TarjetaPago
+        pago={item}
+        onEditar={handleEditar}
+        onEliminar={handleEliminar}
+      />
+    );
+  };
+
+  const datosParaFlatList = [];
+  datosAgrupados.forEach((grupo) => {
+    datosParaFlatList.push(grupo.titulo); // Añade el string ("Hoy", "Ayer", etc)
+    grupo.data.forEach((pago) => datosParaFlatList.push(pago)); // Añade los objetos pago
+  });
 
   return (
     <SafeAreaView style={estilos.contenedor} edges={["top"]}>
@@ -172,8 +232,10 @@ export default function HistorialScreen({ navigation }) {
         </View>
       ) : (
         <FlatList
-          data={pagosFiltrados}
-          keyExtractor={(item, i) => String(item.id ?? i)}
+          data={datosParaFlatList}
+          keyExtractor={(item, i) =>
+            typeof item === "string" ? `header-${item}` : String(item.id ?? i)
+          }
           contentContainerStyle={estilos.lista}
           refreshControl={
             <RefreshControl
@@ -183,13 +245,7 @@ export default function HistorialScreen({ navigation }) {
               tintColor={colors.primary}
             />
           }
-          renderItem={({ item }) => (
-            <TarjetaPago
-              pago={item}
-              onEditar={handleEditar}
-              onEliminar={handleEliminar}
-            />
-          )}
+          renderItem={renderItem}
           ListEmptyComponent={
             <View style={estilos.vacio}>
               <Text style={estilos.vacioTexto}>Sin pagos registrados</Text>
@@ -212,7 +268,7 @@ const estilos = StyleSheet.create({
     backgroundColor: colors.background,
   },
   encabezado: {
-    alignItems: "right",
+    alignItems: "flex-start",
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
@@ -315,6 +371,22 @@ const estilos = StyleSheet.create({
     fontSize: 12,
     fontWeight: font.bold,
     color: colors.primary,
+  },
+  contenedorFecha: {
+    alignSelf: "center",
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  textoFecha: {
+    fontSize: 12,
+    fontWeight: font.bold,
+    color: colors.textMuted,
   },
 
   // ── Lista ──

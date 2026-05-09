@@ -36,12 +36,11 @@ export default function EditarPagoScreen({ route, navigation }) {
   const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
   const handleGuardar = async () => {
-    const montoNum = parseFloat(monto);
-    if (!monto.trim() || isNaN(montoNum) || montoNum <= 0) {
-      setModalData({
-        exito: false,
-        mensaje: "Ingresa un monto mayor a 0.",
-      });
+    const montoNum = monto.trim() === "" ? 0 : parseFloat(monto);
+    const estado = montoNum === 0 ? "Pendiente" : "Confirmado";
+
+    if (isNaN(montoNum) || montoNum < 0) {
+      setModalData({ exito: false, mensaje: "Ingresa un monto válido." });
       setModalVisible(true);
       return;
     }
@@ -52,6 +51,7 @@ export default function EditarPagoScreen({ route, navigation }) {
       cliente,
       monto: montoNum,
       metodo,
+      estado,
     });
 
     if (resultado.ok) {

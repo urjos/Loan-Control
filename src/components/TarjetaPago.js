@@ -23,7 +23,8 @@ const formatearFecha = (iso) => {
 export default function TarjetaPago({ pago, onEditar, onEliminar }) {
   const [eliminando, setEliminando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
+  const estadoPago =
+    pago.estado || (parseFloat(pago.monto) === 0 ? "Pendiente" : "Confirmado");
   const confirmarEliminacion = () => setModalVisible(true);
 
   return (
@@ -46,9 +47,28 @@ export default function TarjetaPago({ pago, onEditar, onEliminar }) {
           </Text>
         </View>
 
-        <Text style={estilos.monto}>
-          {MONEDA} {parseFloat(pago.monto || 0).toFixed(2)}
-        </Text>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text
+            style={[
+              estilos.monto,
+              estadoPago === "Pendiente" && { color: colors.warning },
+            ]}
+          >
+            {MONEDA} {parseFloat(pago.monto || 0).toFixed(2)}
+          </Text>
+          {estadoPago === "Pendiente" && (
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+                color: colors.warning,
+                marginTop: 2,
+              }}
+            >
+              PENDIENTE
+            </Text>
+          )}
+        </View>
       </View>
 
       {/* ── Divisor ── */}
