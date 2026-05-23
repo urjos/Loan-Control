@@ -3,11 +3,20 @@
 // Selector de cliente en forma de chips/píldoras tocables.
 // ================================================================
 
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { colors, spacing, radius, font } from '../styles/theme';
+import React, { useMemo } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
+import { spacing, radius, font, useAppTheme } from "../styles/theme";
 
 export default function ClienteSelector({ clientes, seleccionado, onChange }) {
+  const themeColors = useAppTheme();
+  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
+
   return (
     <ScrollView
       horizontal
@@ -33,30 +42,31 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
   );
 }
 
-const estilos = StyleSheet.create({
-  contenedor: {
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
-    flexDirection: 'row',
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.sm,
-    borderRadius:      radius.full,
-    backgroundColor:   colors.divider,
-    borderWidth:       1.5,
-    borderColor:       colors.border,
-  },
-  chipActivo: {
-    backgroundColor: colors.primary,
-    borderColor:     colors.primary,
-  },
-  texto: {
-    fontSize:   14,
-    fontWeight: font.bold,
-    color:      colors.textMuted,
-  },
-  textoActivo: {
-    color: '#FFFFFF',
-  },
-});
+const crearEstilos = (colors) =>
+  StyleSheet.create({
+    contenedor: {
+      paddingHorizontal: spacing.md,
+      gap: spacing.sm,
+      flexDirection: "row",
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.full,
+      backgroundColor: colors.divider,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    chipActivo: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    texto: {
+      fontSize: 14,
+      fontWeight: font.bold,
+      color: colors.textMuted,
+    },
+    textoActivo: {
+      color: "#FFFFFF",
+    },
+  });

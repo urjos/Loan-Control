@@ -4,7 +4,9 @@
 // Cambiar aquí afecta toda la app.
 // ================================================================
 
-export const colors = {
+import { useColorScheme } from "react-native";
+
+export const lightColors = {
   primary: "#2563EB", // Azul principal
   primaryLight: "#EFF6FF", // Fondo azul suave
   primaryBorder: "#BFDBFE",
@@ -28,6 +30,41 @@ export const colors = {
   border: "#E2E8F0", // Bordes
   borderFocus: "#93C5FD", // Borde al enfocar input
   divider: "#F1F5F9",
+};
+
+export const darkColors = {
+  primary: "#3B82F6", // Azul ligeramente más brillante para resaltar
+  primaryLight: "#1E3A8A", // Fondo azul muy oscuro
+  primaryBorder: "#1E40AF",
+  primaryMuted: "#2563EB",
+
+  success: "#10B981",
+  successLight: "#064E3B",
+
+  danger: "#EF4444",
+  dangerLight: "#7F1D1D",
+
+  warning: "#F59E0B",
+  warningLight: "#78350F",
+
+  text: "#F8FAFC", // Texto principal blanco/gris claro
+  textMuted: "#94A3B8",
+  textLight: "#475569",
+
+  surface: "#1E293B", // Fondo de tarjetas oscuro
+  background: "#0F172A", // Fondo de pantallas casi negro
+  border: "#334155", // Bordes más oscuros
+  borderFocus: "#3B82F6",
+  divider: "#0F172A",
+};
+
+// Mantenemos 'colors' apuntando al claro por defecto para no romper las pantallas que aún no hayas migrado.
+export const colors = lightColors;
+
+// ── Hook para usar en componentes ──
+export const useAppTheme = () => {
+  const scheme = useColorScheme();
+  return scheme === "dark" ? darkColors : lightColors;
 };
 
 export const spacing = {

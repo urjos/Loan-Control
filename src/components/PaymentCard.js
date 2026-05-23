@@ -1,5 +1,5 @@
 import { MaterialIcons, Entypo } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Modal,
 } from "react-native";
 import ModalAlert from "./ModalAlert";
-import { colors, spacing, radius, font, shadow } from "../styles/theme";
+import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 import { MONEDA } from "../config/constants";
 
 // Formatea 'YYYY-MM-DD' → 'DD/MM/YYYY'
@@ -23,24 +23,28 @@ const formatearFecha = (iso) => {
 export default function PaymentCard({ pago, onEditar, onEliminar }) {
   const [eliminando, setEliminando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const themeColors = useAppTheme();
+  const styles = useMemo(() => crearEstilos(themeColors), [themeColors]);
+
   const estadoPago =
     pago.estado || (parseFloat(pago.monto) === 0 ? "Pendiente" : "Confirmado");
   const confirmarEliminacion = () => setModalVisible(true);
 
   return (
-    <View style={estilos.tarjeta}>
+    <View style={styles.tarjeta}>
       {/* ── Fila superior: nombre + monto ── */}
-      <View style={estilos.filaSuperior}>
-        <View style={estilos.avatarContenedor}>
-          <Text style={estilos.avatarLetra}>
+      <View style={styles.filaSuperior}>
+        <View style={styles.avatarContenedor}>
+          <Text style={styles.avatarLetra}>
             {pago.cliente?.charAt(0).toUpperCase() || "?"}
           </Text>
         </View>
 
-        <View style={estilos.info}>
-          <Text style={estilos.nombreCliente}>{pago.cliente}</Text>
+        <View style={styles.info}>
+          <Text style={styles.nombreCliente}>{pago.cliente}</Text>
 
-          <Text style={estilos.fecha}>
+          <Text style={styles.fecha}>
             {formatearFecha(pago.fecha)}{" "}
             {pago.registrado_en?.split(" ")[1] || ""} •{" "}
             {pago.metodo || "Efectivo"}
@@ -50,8 +54,8 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
         <View style={{ alignItems: "flex-end" }}>
           <Text
             style={[
-              estilos.monto,
-              estadoPago === "Pendiente" && { color: colors.warning },
+              styles.monto,
+              estadoPago === "Pendiente" && { color: themeColors.warning },
             ]}
           >
             {MONEDA} {parseFloat(pago.monto || 0).toFixed(2)}
@@ -61,7 +65,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
               style={{
                 fontSize: 12,
                 fontWeight: "bold",
-                color: colors.warning,
+                color: themeColors.warning,
                 marginTop: 2,
               }}
             >
@@ -72,34 +76,36 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
       </View>
 
       {/* ── Divisor ── */}
-      <View style={estilos.divisor} />
+      <View style={styles.divisor} />
 
       {/* ── Acciones: Editar / Eliminar ── */}
-      <View style={estilos.acciones}>
+      <View style={styles.acciones}>
         <TouchableOpacity
-          style={[estilos.botonAccion, estilos.botonEditar]}
+          style={[styles.botonAccion, styles.botonEditar]}
           onPress={() => onEditar(pago)}
           activeOpacity={0.75}
         >
-          <Text style={estilos.textoEditar}>Editar</Text>
+          <Text style={styles.textoEditar}>Editar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[estilos.botonAccion, estilos.botonEliminar]}
+          style={[styles.botonAccion, styles.botonEliminar]}
           onPress={confirmarEliminacion}
           disabled={eliminando}
           activeOpacity={0.75}
         >
           {eliminando ? (
-            <ActivityIndicator size="small" color={colors.danger} />
+            <ActivityIndicator size="small" color={themeColors.danger} />
           ) : (
-            <Text style={estilos.textoEliminar}>Eliminar</Text>
+            <Text style={styles.textoEliminar}>Eliminar</Text>
           )}
         </TouchableOpacity>
       </View>
       <ModalAlert
         visible={modalVisible}
-        icono={<MaterialIcons name="warning" size={48} color={colors.danger} />}
+        icono={
+          <MaterialIcons name="warning" size={48} color={themeColors.danger} />
+        }
         titulo="¿Eliminar pago?"
         mensaje="Esta acción no se puede deshacer."
         botones={[
@@ -107,11 +113,11 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
             texto: "Cancelar",
             onPress: () => setModalVisible(false),
             estilo: {
-              backgroundColor: colors.surface,
+              backgroundColor: themeColors.surface,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: themeColors.border,
             },
-            estiloTexto: { color: colors.text },
+            estiloTexto: { color: themeColors.text },
           },
           {
             texto: "Eliminar",
@@ -121,7 +127,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
               await onEliminar(pago.id);
               setEliminando(false);
             },
-            estilo: { backgroundColor: colors.danger },
+            estilo: { backgroundColor: themeColors.danger },
             estiloTexto: { color: "#FFF" },
           },
         ]}
@@ -130,93 +136,94 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
   );
 }
 
-const estilos = StyleSheet.create({
-  tarjeta: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    marginBottom: spacing.sm,
-    overflow: "hidden",
-    ...shadow.sm,
-  },
+const crearEstilos = (colors) =>
+  StyleSheet.create({
+    tarjeta: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      marginBottom: spacing.sm,
+      overflow: "hidden",
+      ...shadow.sm,
+    },
 
-  // ── Fila superior ──
-  filaSuperior: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  avatarContenedor: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    backgroundColor: colors.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: colors.primaryBorder,
-  },
-  avatarLetra: {
-    fontSize: 18,
-    fontWeight: font.black,
-    color: colors.primary,
-  },
-  info: {
-    flex: 1,
-  },
-  nombreCliente: {
-    fontSize: 15,
-    fontWeight: font.black,
-    color: colors.text,
-  },
-  fecha: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  timestamp: {
-    fontSize: 11,
-    color: colors.textLight,
-    marginTop: 1,
-  },
-  monto: {
-    fontSize: 20,
-    fontWeight: font.black,
-    color: colors.success,
-  },
+    // ── Fila superior ──
+    filaSuperior: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    avatarContenedor: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.full,
+      backgroundColor: colors.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 1.5,
+      borderColor: colors.primaryBorder,
+    },
+    avatarLetra: {
+      fontSize: 18,
+      fontWeight: font.black,
+      color: colors.primary,
+    },
+    info: {
+      flex: 1,
+    },
+    nombreCliente: {
+      fontSize: 15,
+      fontWeight: font.black,
+      color: colors.text,
+    },
+    fecha: {
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    timestamp: {
+      fontSize: 11,
+      color: colors.textLight,
+      marginTop: 1,
+    },
+    monto: {
+      fontSize: 20,
+      fontWeight: font.black,
+      color: colors.success,
+    },
 
-  // ── Divisor ──
-  divisor: {
-    height: 1,
-    backgroundColor: colors.divider,
-    marginHorizontal: spacing.md,
-  },
+    // ── Divisor ──
+    divisor: {
+      height: 1,
+      backgroundColor: colors.divider,
+      marginHorizontal: spacing.md,
+    },
 
-  // ── Acciones ──
-  acciones: {
-    flexDirection: "row",
-  },
-  botonAccion: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  botonEditar: {
-    borderRightWidth: 1,
-    borderRightColor: colors.divider,
-  },
-  botonEliminar: {},
-  textoEditar: {
-    fontSize: 13,
-    fontWeight: font.bold,
-    color: colors.warning,
-  },
-  textoEliminar: {
-    fontSize: 13,
-    fontWeight: font.bold,
-    color: colors.danger,
-  },
-});
+    // ── Acciones ──
+    acciones: {
+      flexDirection: "row",
+    },
+    botonAccion: {
+      flex: 1,
+      paddingVertical: spacing.sm + 2,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    botonEditar: {
+      borderRightWidth: 1,
+      borderRightColor: colors.divider,
+    },
+    botonEliminar: {},
+    textoEditar: {
+      fontSize: 13,
+      fontWeight: font.bold,
+      color: colors.warning,
+    },
+    textoEliminar: {
+      fontSize: 13,
+      fontWeight: font.bold,
+      color: colors.danger,
+    },
+  });

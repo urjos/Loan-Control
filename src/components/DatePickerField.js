@@ -5,7 +5,7 @@
 // iOS:     muestra un picker en un modal inferior.
 // ================================================================
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,12 +14,18 @@ import {
   StyleSheet,
   Platform,
   SafeAreaView,
+  useColorScheme,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { colors, spacing, radius, font, shadow } from "../styles/theme";
+import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
 // Convierte Date → string 'YYYY-MM-DD'
-const toISO = (date) => date.toISOString().split("T")[0];
+const toISO = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
 // Formatea 'YYYY-MM-DD' → 'DD/MM/YYYY' para mostrar
 const formatear = (iso) => {
@@ -30,6 +36,10 @@ const formatear = (iso) => {
 
 export default function DatePickerField({ label, value, onChange }) {
   const [visible, setVisible] = useState(false);
+
+  const themeColors = useAppTheme();
+  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
+  const scheme = useColorScheme();
 
   // La fecha actual como objeto Date (para el picker)
   const fechaDate = value ? new Date(value + "T12:00:00") : new Date();
@@ -66,6 +76,7 @@ export default function DatePickerField({ label, value, onChange }) {
           display="calendar"
           onChange={handleChange}
           locale="es-PE"
+          themeVariant={scheme || "light"}
         />
       )}
 
@@ -96,7 +107,8 @@ export default function DatePickerField({ label, value, onChange }) {
               onChange={handleChange}
               locale="es-PE"
               style={estilos.pickerIOS}
-              accentColor={colors.primary}
+              accentColor={themeColors.primary}
+              themeVariant={scheme || "light"}
             />
           </SafeAreaView>
         </Modal>
@@ -105,79 +117,80 @@ export default function DatePickerField({ label, value, onChange }) {
   );
 }
 
-const estilos = StyleSheet.create({
-  etiqueta: {
-    fontSize: 14,
-    fontWeight: font.bold,
-    color: colors.text,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  campo: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    marginHorizontal: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    ...shadow.sm,
-  },
-  icono: {
-    fontSize: 20,
-    marginRight: spacing.sm,
-  },
-  texto: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: font.bold,
-    color: colors.text,
-  },
-  chevron: {
-    fontSize: 22,
-    color: colors.textLight,
-    fontWeight: font.bold,
-  },
+const crearEstilos = (colors) =>
+  StyleSheet.create({
+    etiqueta: {
+      fontSize: 14,
+      fontWeight: font.bold,
+      color: colors.text,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    campo: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      marginHorizontal: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      ...shadow.sm,
+    },
+    icono: {
+      fontSize: 20,
+      marginRight: spacing.sm,
+    },
+    texto: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: font.bold,
+      color: colors.text,
+    },
+    chevron: {
+      fontSize: 22,
+      color: colors.textLight,
+      fontWeight: font.bold,
+    },
 
-  // ── iOS Modal ──
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  modal: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    ...shadow.md,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitulo: {
-    fontSize: 16,
-    fontWeight: font.bold,
-    color: colors.text,
-  },
-  botonListo: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.sm,
-  },
-  textoListo: {
-    color: colors.primary,
-    fontWeight: font.bold,
-    fontSize: 15,
-  },
-  pickerIOS: {
-    alignSelf: "center",
-  },
-});
+    // ── iOS Modal ──
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.3)",
+    },
+    modal: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
+      ...shadow.md,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalTitulo: {
+      fontSize: 16,
+      fontWeight: font.bold,
+      color: colors.text,
+    },
+    botonListo: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      backgroundColor: colors.primaryLight,
+      borderRadius: radius.sm,
+    },
+    textoListo: {
+      color: colors.primary,
+      fontWeight: font.bold,
+      fontSize: 15,
+    },
+    pickerIOS: {
+      alignSelf: "center",
+    },
+  });
