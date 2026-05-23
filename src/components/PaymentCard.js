@@ -20,7 +20,7 @@ const formatearFecha = (iso) => {
   return `${d}/${m}/${y}`;
 };
 
-export default function TarjetaPago({ pago, onEditar, onEliminar }) {
+export default function PaymentCard({ pago, onEditar, onEliminar }) {
   const [eliminando, setEliminando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const estadoPago =

@@ -14,8 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 
-import TarjetaPago from "../components/TarjetaPago";
-import { usePagos } from "../hooks/usePagos";
+import PaymentCard from "../components/PaymentCard";
+import { usePagos } from "../hooks/usePayments";
 import { CLIENTES, MONEDA } from "../config/constants";
 import { colors, spacing, radius, font, shadow } from "../styles/theme";
 
@@ -24,7 +24,7 @@ const OPCIONES_ORDEN = [
   { key: "asc", label: "↑ Más antiguos" },
 ];
 
-export default function HistorialScreen({ navigation }) {
+export default function Historial({ navigation }) {
   const { pagos, cargando, guardando, fetchPagos, eliminarPago } = usePagos();
 
   const [filtro, setFiltro] = useState("Todos");
@@ -139,7 +139,7 @@ export default function HistorialScreen({ navigation }) {
     }
 
     return (
-      <TarjetaPago
+      <PaymentCard
         pago={item}
         onEditar={handleEditar}
         onEliminar={handleEliminar}

@@ -1,18 +1,3 @@
-// ================================================================
-// 🧭  App.js — Punto de entrada y configuración de navegación
-//
-// Estructura de navegación:
-//   RootStack (no visible)
-//   ├── MainTabs (Bottom Tabs)
-//   │   ├── Tab "Registrar"  → RegistrarPagoScreen
-//   │   └── Tab "Historial"  → HistorialScreen
-//   └── Modal "EditarPago"   → EditarPagoScreen
-//
-// Usar un RootStack encima de los Tabs permite abrir EditarPago
-// como una pantalla de pila (con animación de slide) desde
-// cualquier Tab, sin que aparezca en la barra inferior.
-// ================================================================
-
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, Text } from "react-native";
@@ -20,9 +5,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import RegistrarPagoScreen from "./src/screens/RegistrarPagoScreen";
-import HistorialScreen from "./src/screens/HistorialScreen";
-import EditarPagoScreen from "./src/screens/EditarPagoScreen";
+import RegisterPayment from "./src/screens/RegisterPayment";
+import Historial from "./src/screens/Historial";
+import EditPayment from "./src/screens/EditPayment";
 
 import { colors, font } from "./src/styles/theme";
 
@@ -52,7 +37,7 @@ function MainTabs() {
     >
       <Tab.Screen
         name="Registrar"
-        component={RegistrarPagoScreen}
+        component={RegisterPayment}
         options={{
           tabBarLabel: "Registrar Pago",
           tabBarIcon: () => (
@@ -63,7 +48,7 @@ function MainTabs() {
 
       <Tab.Screen
         name="Historial"
-        component={HistorialScreen}
+        component={Historial}
         options={{
           tabBarLabel: "Historial",
           tabBarIcon: () => (
@@ -91,7 +76,7 @@ export default function App() {
         {/* Pantalla de edición: slide desde abajo en iOS, push en Android */}
         <Stack.Screen
           name="EditarPago"
-          component={EditarPagoScreen}
+          component={EditPayment}
           options={{
             presentation: "card",
             animation: "slide_from_right",

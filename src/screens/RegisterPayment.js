@@ -1,7 +1,8 @@
-import { MaterialIcons, Feather } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   View,
+  Modal,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,30 +11,37 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalAlert from "../components/ModalAlert";
 import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
-import { usePagos } from "../hooks/usePagos";
+import { usePagos } from "../hooks/usePayments";
 import { CLIENTES, MONEDA } from "../config/constants";
 import { colors, spacing, radius, font, shadow } from "../styles/theme";
 
-export default function EditarPagoScreen({ route, navigation }) {
-  // El pago original llega como parámetro de navegación
-  const { pago } = route.params;
+// Fecha de hoy en YYYY-MM-DD
+const hoyISO = () => new Date().toISOString().split("T")[0];
 
-  const { actualizarPago, guardando } = usePagos();
+export default function RegisterPayment() {
+  const { crearPago, guardando } = usePagos();
 
-  // Estado local inicializado con los valores actuales del pago
-  const [cliente, setCliente] = useState(pago.cliente);
-  const [monto, setMonto] = useState(String(pago.monto));
-  const [fecha, setFecha] = useState(pago.fecha);
-  const [metodo, setMetodo] = useState(pago.metodo || "Efectivo");
+  const [cliente, setCliente] = useState(CLIENTES[0]);
+  const [monto, setMonto] = useState("");
+  const [fecha, setFecha] = useState(hoyISO());
+  const [metodo, setMetodo] = useState("Efectivo");
   const METODOS = ["Efectivo", "Yape", "Otro"];
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
+
+  const limpiar = () => {
+    setMonto("");
+    setFecha(hoyISO());
+    setCliente(CLIENTES[0]);
+    setMetodo("Efectivo");
+  };
 
   const handleGuardar = async () => {
     const montoNum = monto.trim() === "" ? 0 : parseFloat(monto);
@@ -45,8 +53,7 @@ export default function EditarPagoScreen({ route, navigation }) {
       return;
     }
 
-    const resultado = await actualizarPago({
-      id: pago.id,
+    const resultado = await crearPago({
       fecha,
       cliente,
       monto: montoNum,
@@ -55,52 +62,57 @@ export default function EditarPagoScreen({ route, navigation }) {
     });
 
     if (resultado.ok) {
-      setModalData({ exito: true, mensaje: "Pago actualizado correctamente." });
+      if (estado === "Pendiente") {
+        setModalData({
+          exito: true,
+          mensaje: `Pago registrado como PENDIENTE de ${cliente}. Verifica el pago posteriormente.`,
+        });
+      } else {
+        setModalData({
+          exito: true,
+          mensaje: `Pago de ${MONEDA} ${montoNum.toFixed(2)} en ${metodo} de ${cliente} registrado.`,
+        });
+      }
+
       setModalVisible(true);
+      limpiar();
     } else {
       setModalData({
         exito: false,
-        mensaje: resultado.message || "Error al actualizar.",
+        mensaje:
+          resultado.message || "No se pudo guardar. Verifica tu internet.",
       });
       setModalVisible(true);
     }
   };
 
+  const montoValido = !isNaN(parseFloat(monto)) && parseFloat(monto) > 0;
+
   return (
     <SafeAreaView style={estilos.contenedor} edges={["top"]}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Encabezado ── */}
         <View style={estilos.encabezado}>
-          {/* Botón volver */}
-          <TouchableOpacity
-            style={estilos.botonVolver}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={estilos.textoVolver}>‹ Volver</Text>
-          </TouchableOpacity>
-
-          <Text style={estilos.titulo}>Editar Pago</Text>
-          <Text style={estilos.subtitulo}>Modifica los datos y guarda</Text>
+          <Text style={estilos.titulo}>Registrar Pago</Text>
+          <Text style={estilos.subtitulo}>Completa los datos del cobro</Text>
         </View>
 
-        {/* ── Banner con ID del pago (referencia) ── */}
-        <View style={estilos.idBanner}>
-          <Text style={estilos.idTexto}>ID: {pago.id}</Text>
-        </View>
-
-        {/* ── Cliente ── */}
-        <Text style={estilos.etiqueta}>Cliente</Text>
+        {/* ── Sección: Cliente ── */}
+        <Text style={estilos.etiqueta}>¿Quién pagó?</Text>
         <ClienteSelector
           clientes={CLIENTES}
           seleccionado={cliente}
           onChange={setCliente}
         />
 
-        {/* ── Monto ── */}
-        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>Monto</Text>
+        {/* ── Sección: Monto ── */}
+        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+          Monto cobrado
+        </Text>
         <View style={estilos.inputMontoContenedor}>
           <Text style={estilos.prefijo}>{MONEDA}</Text>
           <TextInput
@@ -112,7 +124,6 @@ export default function EditarPagoScreen({ route, navigation }) {
             placeholderTextColor={colors.textLight}
           />
         </View>
-
         {/* ── Sección: Método de Pago ── */}
         <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
           Método de pago
@@ -140,7 +151,7 @@ export default function EditarPagoScreen({ route, navigation }) {
           ))}
         </View>
 
-        {/* ── Fecha ── */}
+        {/* ── Sección: Fecha ── */}
         <View style={{ marginTop: spacing.lg }}>
           <DatePickerField
             label="Fecha del pago"
@@ -149,12 +160,24 @@ export default function EditarPagoScreen({ route, navigation }) {
           />
         </View>
 
-        {/* ── Botones ── */}
+        {/* ── Resumen antes de guardar ── */}
+        {montoValido && (
+          <View style={estilos.resumen}>
+            <Text style={estilos.resumenTitulo}>Resumen del pago</Text>
+            <Row label="Cliente:" value={cliente} />
+            <Row
+              label="Monto:"
+              value={`${MONEDA} ${parseFloat(monto).toFixed(2)}`}
+              highlight
+            />
+            <Row label="Método:" value={metodo} />
+            <Row label="Fecha:" value={fecha.split("-").reverse().join("/")} />
+          </View>
+        )}
+
+        {/* ── Botón guardar ── */}
         <TouchableOpacity
-          style={[
-            estilos.botonGuardar,
-            guardando && estilos.botonDeshabilitado,
-          ]}
+          style={[estilos.boton, guardando && estilos.botonDeshabilitado]}
           onPress={handleGuardar}
           disabled={guardando}
           activeOpacity={0.85}
@@ -162,39 +185,32 @@ export default function EditarPagoScreen({ route, navigation }) {
           {guardando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={estilos.textoBoton}>Guardar →</Text>
+            <Text style={estilos.textoBoton}>Guardar→</Text>
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={estilos.botonCancelar}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.75}
-        >
-          <Text style={estilos.textoCancelar}>Cancelar</Text>
         </TouchableOpacity>
 
         <View style={{ height: spacing.xl }} />
       </ScrollView>
-      {/* ── Modal Personalizado ── */}
+
       <ModalAlert
         visible={modalVisible}
         icono={
           modalData.exito ? (
-            <Feather name="edit-3" size={48} color={colors.primary} />
+            <MaterialIcons
+              name="check-circle"
+              size={48}
+              color={colors.primary}
+            />
           ) : (
             <MaterialIcons name="error" size={48} color={colors.danger} />
           )
         }
-        titulo={modalData.exito ? "¡Editado!" : "Error"}
+        titulo={modalData.exito ? "¡Guardado!" : "Error"}
         mensaje={modalData.mensaje}
         botones={[
           {
             texto: "Regresar",
-            onPress: () => {
-              setModalVisible(false);
-              if (modalData.exito) navigation.goBack();
-            },
+            onPress: () => setModalVisible(false),
             estilo: {
               backgroundColor: modalData.exito ? colors.primary : colors.danger,
             },
@@ -203,6 +219,20 @@ export default function EditarPagoScreen({ route, navigation }) {
         ]}
       />
     </SafeAreaView>
+  );
+}
+
+// Sub-componente de fila del resumen
+function Row({ label, value, highlight }) {
+  return (
+    <View style={estilos.resumenFila}>
+      <Text style={estilos.resumenLabel}>{label}</Text>
+      <Text
+        style={[estilos.resumenValor, highlight && { color: colors.success }]}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -217,18 +247,8 @@ const estilos = StyleSheet.create({
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
   },
-  botonVolver: {
-    alignSelf: "flex-start",
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  textoVolver: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: font.bold,
-  },
   emoji: {
-    fontSize: 40,
+    fontSize: 44,
     marginBottom: spacing.xs,
   },
   titulo: {
@@ -242,19 +262,6 @@ const estilos = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     marginTop: spacing.xs,
-  },
-  idBanner: {
-    backgroundColor: colors.divider,
-    marginHorizontal: spacing.md,
-    borderRadius: radius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  idTexto: {
-    fontSize: 11,
-    color: colors.textLight,
-    fontFamily: Platform?.OS === "ios" ? "Courier" : "monospace",
   },
   etiqueta: {
     fontSize: 14,
@@ -287,12 +294,41 @@ const estilos = StyleSheet.create({
     color: colors.text,
     paddingVertical: spacing.md,
   },
-  botonGuardar: {
+  resumen: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.primaryBorder,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+  },
+  resumenTitulo: {
+    fontSize: 13,
+    fontWeight: font.black,
+    color: colors.primary,
+    marginBottom: spacing.sm,
+  },
+  resumenFila: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: spacing.xs,
+  },
+  resumenLabel: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  resumenValor: {
+    fontSize: 14,
+    fontWeight: font.bold,
+    color: colors.text,
+  },
+  boton: {
     backgroundColor: colors.primary,
     borderRadius: radius.lg,
     paddingVertical: spacing.md + 2,
     marginHorizontal: spacing.md,
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     alignItems: "center",
     ...shadow.primary,
   },
@@ -305,62 +341,6 @@ const estilos = StyleSheet.create({
     fontSize: 17,
     fontWeight: font.black,
     letterSpacing: 0.3,
-  },
-  botonCancelar: {
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  textoCancelar: {
-    color: colors.textMuted,
-    fontSize: 16,
-    fontWeight: font.bold,
-  },
-  // ── Estilos del Modal ──
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContenido: {
-    backgroundColor: colors.surface,
-    padding: spacing.xl,
-    borderRadius: radius.lg,
-    alignItems: "center",
-    width: "80%",
-    ...shadow.md,
-  },
-  modalIcono: {
-    fontSize: 40,
-    marginBottom: spacing.sm,
-  },
-  modalTitulo: {
-    fontSize: 20,
-    fontWeight: font.bold,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  modalMensaje: {
-    fontSize: 16,
-    color: colors.textLight,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-  botonModal: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.md,
-  },
-  textoBotonModal: {
-    color: "#FFF",
-    fontWeight: font.bold,
-    fontSize: 16,
   },
   // ── Estilos Método Pago ──
   filaMetodos: {
@@ -386,5 +366,7 @@ const estilos = StyleSheet.create({
     fontWeight: font.bold,
     color: colors.textMuted,
   },
-  chipTextoMetodoActivo: { color: "#FFF" },
+  chipTextoMetodoActivo: {
+    color: "#FFF",
+  },
 });
