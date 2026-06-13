@@ -51,11 +51,11 @@ export const darkColors = {
   textMuted: "#94A3B8",
   textLight: "#475569",
 
-  surface: "#2b323d",
+  surface: "#1e2229",
   background: "#0e0f0f",
   border: "#2c333d00",
   borderFocus: "#3a81f3",
-  divider: "#1f2430",
+  divider: "#161922",
 };
 
 export const colors = lightColors;

@@ -39,9 +39,9 @@ export default function Historial({ navigation }) {
   const scheme = useColorScheme();
 
   const [filtro, setFiltro] = useState("Todos");
-  const [orden, setOrden] = useState("desc"); // 'asc' | 'desc'
+  const [orden, setOrden] = useState("desc");
   const [busqueda, setBusqueda] = useState("");
-  const [tipoBusqueda, setTipoBusqueda] = useState("monto"); // 'monto' | 'metodo'
+  const [tipoBusqueda, setTipoBusqueda] = useState("monto");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState("");
   const [mostrarMetodosBox, setMostrarMetodosBox] = useState(false);
   const [fechaBusqueda, setFechaBusqueda] = useState("");
@@ -115,6 +115,9 @@ export default function Historial({ navigation }) {
       return p.fecha === fechaBusqueda;
     })
     .sort((a, b) => {
+      if (a.fecha > b.fecha) return orden === "asc" ? 1 : -1;
+      if (a.fecha < b.fecha) return orden === "asc" ? -1 : 1;
+
       const timeA = parseInt(String(a.id).replace("P_", "")) || 0;
       const timeB = parseInt(String(b.id).replace("P_", "")) || 0;
       return orden === "asc" ? timeA - timeB : timeB - timeA;
@@ -204,7 +207,8 @@ export default function Historial({ navigation }) {
             {filtro === "Todos" ? "Total cobrado" : `Total de ${filtro}`}
           </Text>
           <Text style={estilos.totalMonto}>
-            {MONEDA} {totalFiltrado.toFixed(2)}
+            {MONEDA}{" "}
+            {totalFiltrado.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
           </Text>
         </View>
 
@@ -214,7 +218,8 @@ export default function Historial({ navigation }) {
             <View style={estilos.totalItem}>
               <Text style={estilos.totalLabel}>Total global</Text>
               <Text style={[estilos.totalMonto, { color: "#93C5FD" }]}>
-                {MONEDA} {totalGlobal.toFixed(2)}
+                {MONEDA}{" "}
+                {totalGlobal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               </Text>
             </View>
           </>
@@ -397,7 +402,7 @@ export default function Historial({ navigation }) {
               setFechaBusqueda(toLocalISOString(selectedDate));
             }
           }}
-          themeVariant={scheme || "light"}
+          themeVariant={scheme === "dark" ? "dark" : "light"}
         />
       )}
 
@@ -436,7 +441,7 @@ export default function Historial({ navigation }) {
                 }
               }}
               accentColor={themeColors.primary}
-              themeVariant={scheme || "light"}
+              themeVariant={scheme === "dark" ? "dark" : "light"}
             />
           </View>
         </Modal>

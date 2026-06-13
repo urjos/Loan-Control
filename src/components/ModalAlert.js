@@ -66,7 +66,7 @@ const crearEstilos = (colors) =>
     },
     modalMensaje: {
       fontSize: 16,
-      color: colors.textLight,
+      color: colors.textMuted,
       textAlign: "center",
       marginBottom: spacing.lg,
     },

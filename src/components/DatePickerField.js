@@ -76,7 +76,7 @@ export default function DatePickerField({ label, value, onChange }) {
           display="calendar"
           onChange={handleChange}
           locale="es-PE"
-          themeVariant={scheme || "light"}
+          themeVariant={scheme === "dark" ? "dark" : "light"}
         />
       )}
 
@@ -108,7 +108,7 @@ export default function DatePickerField({ label, value, onChange }) {
               locale="es-PE"
               style={estilos.pickerIOS}
               accentColor={themeColors.primary}
-              themeVariant={scheme || "light"}
+              themeVariant={scheme === "dark" ? "dark" : "light"}
             />
           </SafeAreaView>
         </Modal>
