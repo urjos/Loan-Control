@@ -27,13 +27,13 @@ export const lightColors = {
 
   surface: "#FFFFFF", // Fondo de tarjetas
   background: "#F8FAFC", // Fondo de pantallas
-  border: "#E2E8F0", // Bordes
+  border: "#eef2f7", // Bordes
   borderFocus: "#93C5FD", // Borde al enfocar input
   divider: "#F1F5F9",
 };
 
 export const darkColors = {
-  primary: "#3B82F6", // Azul ligeramente más brillante para resaltar
+  primary: "#2879fa", // Azul ligeramente más brillante para resaltar
   primaryLight: "#1E3A8A", // Fondo azul muy oscuro
   primaryBorder: "#1E40AF",
   primaryMuted: "#2563EB",
@@ -51,17 +51,15 @@ export const darkColors = {
   textMuted: "#94A3B8",
   textLight: "#475569",
 
-  surface: "#1E293B", // Fondo de tarjetas oscuro
-  background: "#0F172A", // Fondo de pantallas casi negro
-  border: "#334155", // Bordes más oscuros
-  borderFocus: "#3B82F6",
-  divider: "#0F172A",
+  surface: "#2b323d",
+  background: "#0e0f0f",
+  border: "#2c333d00",
+  borderFocus: "#3a81f3",
+  divider: "#1f2430",
 };
 
-// Mantenemos 'colors' apuntando al claro por defecto para no romper las pantallas que aún no hayas migrado.
 export const colors = lightColors;
 
-// ── Hook para usar en componentes ──
 export const useAppTheme = () => {
   const scheme = useColorScheme();
   return scheme === "dark" ? darkColors : lightColors;
