@@ -54,6 +54,11 @@ export default function EditPayment({ route, navigation }) {
 
     if (resultado.ok) {
       navigation.goBack();
+    } else {
+      Alert.alert(
+        "Error al Guardar",
+        resultado.message || "Ocurrió un error inesperado.",
+      );
     }
   };
 

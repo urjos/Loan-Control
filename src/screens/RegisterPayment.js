@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Platform,
   StatusBar,
+  ToastAndroid,
   Appearance,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,6 +70,15 @@ export default function RegisterPayment() {
 
     if (resultado.ok) {
       limpiar();
+      // Si el pago está pendiente (guardado offline), notificamos al usuario.
+      if (resultado.pago.isPending) {
+        const msg = "Sin conexión. El pago se guardó localmente.";
+        if (Platform.OS === "android") {
+          ToastAndroid.show(msg, ToastAndroid.LONG);
+        } else {
+          Alert.alert("Guardado Localmente", msg);
+        }
+      }
     }
   };
 
@@ -170,6 +180,7 @@ export default function RegisterPayment() {
         </View>
 
         {/* ── Resumen antes de guardar ── */}
+
         {montoValido && (
           <View style={estilos.resumen}>
             <Text style={estilos.resumenTitulo}>Resumen del pago</Text>

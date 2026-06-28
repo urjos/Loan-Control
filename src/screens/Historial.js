@@ -32,7 +32,8 @@ const toLocalISOString = (date) => {
 };
 
 export default function Historial({ navigation }) {
-  const { pagos, cargando, guardando, fetchPagos, eliminarPago } = usePagos();
+  const { pagos, cargando, sincronizando, fetchPagos, eliminarPago } =
+    usePagos();
 
   const themeColors = useAppTheme();
   const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
@@ -170,12 +171,16 @@ export default function Historial({ navigation }) {
         </View>
       );
     }
+    // El hook `usePagos` añade `isPending: true` a los pagos offline.
+    // También podemos verificar el prefijo del ID.
+    const isPending = item.isPending || String(item.id).startsWith("offline_");
 
     return (
       <PaymentCard
         pago={item}
         onEditar={handleEditar}
         onEliminar={handleEliminar}
+        isPending={isPending} // Pasamos el estado pendiente a la tarjeta
       />
     );
   };
@@ -197,6 +202,12 @@ export default function Historial({ navigation }) {
             {pagos.length === 1 ? "pago registrado" : "pagos registrados"}
           </Text>
         </View>
+        {sincronizando && (
+          <View style={estilos.syncIndicator}>
+            <ActivityIndicator color={themeColors.primary} size="small" />
+            <Text style={estilos.syncText}>Sincronizando...</Text>
+          </View>
+        )}
       </View>
 
       {/* ── Tarjeta de totales ── */}
@@ -531,6 +542,17 @@ const crearEstilos = (colors) =>
       fontSize: 13,
       color: colors.textMuted,
       marginTop: spacing.xs,
+    },
+    syncIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    syncText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      fontWeight: font.bold,
     },
 
     // ── Totales ──
