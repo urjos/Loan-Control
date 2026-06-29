@@ -9,7 +9,6 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 
-// --- API ---
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const api = {
@@ -191,35 +190,29 @@ export function PaymentsProvider({ children }) {
   const crearPago = useCallback(
     async (nuevoPago) => {
       setGuardando(true);
-      const netState = await NetInfo.fetch();
-
-      // 🔧 FIX: generamos el id permanente AQUÍ, antes de saber si hay
-      // conexión. Así, tanto el pago que se manda directo a la API como
-      // el que se guarda en la cola offline ya tienen un id real desde
-      // el inicio — necesario porque el backend idempotente usa este id
-      // para identificar y deduplicar pagos.
-      const idPermanente = nuevoPago.id || generarId();
-      const pagoConId = { ...nuevoPago, id: idPermanente };
-
-      if (netState.isConnected && netState.isInternetReachable) {
-        try {
-          const pagoGuardado = await api.createPayment(pagoConId);
-          setPagos((prev) => [pagoGuardado, ...prev]);
-          syncOfflinePayments();
-          return { ok: true, pago: pagoGuardado };
-        } catch (error) {
-          return await saveOffline(
-            pagoConId,
-            "Fallo la API, guardando localmente.",
-          );
-        } finally {
-          setGuardando(false);
-        }
-      } else {
-        return await saveOffline(
-          pagoConId,
-          "Sin conexión, guardado localmente.",
+      try {
+        // 🔧 FIX VELOCIDAD: antes, si había internet, esperábamos la
+        // respuesta de Google Apps Script (1-3s típicos) antes de
+        // mostrar el pago en pantalla. Ahora guardamos SIEMPRE primero
+        // en local —igual de rápido que el flujo offline— y disparamos
+        // la sincronización con el servidor en segundo plano.
+        //
+        // Ya no se necesita NetInfo.fetch() aquí: si hay conexión,
+        // syncOfflinePayments() lo subirá en segundo plano en cuanto
+        // termine de guardarse localmente. Si no hay conexión, se
+        // queda en la cola y se sincroniza solo cuando vuelva el internet.
+        const resultado = await saveOffline(
+          nuevoPago,
+          "Guardado local instantáneo. Sincronizando con el servidor...",
         );
+
+        // Importante: NO usamos "await" aquí a propósito. La sync corre
+        // en paralelo sin bloquear el regreso a la pantalla.
+        syncOfflinePayments();
+
+        return resultado;
+      } finally {
+        setGuardando(false);
       }
     },
     [syncOfflinePayments],

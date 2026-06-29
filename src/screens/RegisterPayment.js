@@ -68,18 +68,7 @@ export default function RegisterPayment() {
       estado,
     });
 
-    if (resultado.ok) {
-      limpiar();
-      // Si el pago está pendiente (guardado offline), notificamos al usuario.
-      if (resultado.pago.isPending) {
-        const msg = "Sin conexión. El pago se guardó localmente.";
-        if (Platform.OS === "android") {
-          ToastAndroid.show(msg, ToastAndroid.LONG);
-        } else {
-          Alert.alert("Guardado Localmente", msg);
-        }
-      }
-    }
+    limpiar();
   };
 
   return (
