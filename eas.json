@@ -1,12 +1,25 @@
 {
   "cli": {
-    "appVersionSource": "remote"
+    "version": ">= 7.6.0"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
     "preview": {
-      "android": {
-        "buildType": "apk"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "@EXPO_PUBLIC_API_URL"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "@EXPO_PUBLIC_API_URL"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
