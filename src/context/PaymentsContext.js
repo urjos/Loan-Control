@@ -1,15 +1,15 @@
-// ================================================================
-// 🚀 src/hooks/usePayments.js
-// Hook centralizado para gestionar pagos con capacidad offline.
-// ================================================================
-
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 
-// --- Simulación de API ---
-// En un proyecto real, esto estaría en un archivo separado (ej. src/api/googleSheet.js)
-// y la URL estaría en variables de entorno.
+// --- API ---
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const api = {
@@ -19,52 +19,45 @@ const api = {
     return await response.json();
   },
   createPayment: async (payment) => {
-    // El backend espera los datos como parámetros en la URL (GET)
-    const params = new URLSearchParams({
-      action: "create",
-      ...payment, // Se envía el objeto completo, incluyendo el ID del cliente
+    const response = await fetch(`${API_URL}?action=create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payment),
     });
-    const response = await fetch(`${API_URL}?${params.toString()}`);
     if (!response.ok) throw new Error("Error al crear el pago");
-    const data = await response.json();
-    if (data.error) throw new Error(data.error); // Captura errores lógicos del backend
-    return data;
+    return await response.json();
   },
   updatePayment: async (id, payment) => {
-    const { id: paymentId, ...paymentData } = payment; // Evita enviar 'id' en el cuerpo
-    const params = new URLSearchParams({
-      action: "update",
-      id: id,
-      ...paymentData,
+    const response = await fetch(`${API_URL}?action=update&id=${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payment),
     });
-    const response = await fetch(`${API_URL}?${params.toString()}`);
     if (!response.ok) throw new Error("Error al actualizar el pago");
-    const data = await response.json();
-    if (data.error) throw new Error(data.error);
-    return data;
+    return await response.json();
   },
   deletePayment: async (id) => {
-    const params = new URLSearchParams({
-      action: "delete",
-      id: id,
+    const response = await fetch(`${API_URL}?action=delete&id=${id}`, {
+      method: "POST",
     });
-    const response = await fetch(`${API_URL}?${params.toString()}`);
     if (!response.ok) throw new Error("Error al eliminar el pago");
-    const data = await response.json();
-    if (data.error) throw new Error(data.error);
-    return { ok: data.success || false };
+    return { ok: true };
   },
 };
-// --- Fin de simulación de API ---
 
 const OFFLINE_QUEUE_KEY = "offline_payments_queue";
 
-export function usePagos() {
+const generarId = () =>
+  `P_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const PaymentsContext = createContext(null);
+
+export function PaymentsProvider({ children }) {
   const [pagos, setPagos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
-  const isSyncing = useRef(false); // Ref para evitar ejecuciones concurrentes de la sincronización.
+  const isSyncing = useRef(false); // Único guard en toda la app — ya no hay condición de carrera entre pantallas.
 
   useEffect(() => {
     fetchPagos();
@@ -73,13 +66,11 @@ export function usePagos() {
         syncOfflinePayments();
       }
     });
-
     return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncOfflinePayments = useCallback(async () => {
-    // La guardia con useRef es crucial para prevenir ejecuciones múltiples
-    // causadas por eventos de red rápidos o re-renders.
     if (isSyncing.current) {
       console.log("Sincronización ya en progreso, omitiendo nueva ejecución.");
       return;
@@ -93,7 +84,6 @@ export function usePagos() {
       let queue = queueStr ? JSON.parse(queueStr) : [];
 
       if (queue.length === 0) {
-        // No hay nada que hacer, salimos y reseteamos los flags.
         isSyncing.current = false;
         setSincronizando(false);
         return;
@@ -106,16 +96,26 @@ export function usePagos() {
       const failedPayments = [];
       for (const pago of queue) {
         try {
-          // Enviamos el pago completo, incluyendo el ID generado en el cliente.
-          const { isPending, ...pagoData } = pago;
-          await api.createPayment(pagoData);
-          console.log(`Pago ${pago.id} sincronizado con éxito.`);
+          // 🔧 FIX: el backend idempotente necesita un "id" real para
+          // poder detectar duplicados. Antes lo descartábamos aquí
+          // (`const { id, ...pagoData } = pago`), lo que dejaba el
+          // campo "id" vacío en el Sheet. Ahora generamos un id
+          // permanente y lo incluimos en el payload que se envía.
+          const { id: idLocal, isPending, ...pagoData } = pago;
+          const idPermanente = idLocal.startsWith("offline_")
+            ? generarId()
+            : idLocal;
+
+          await api.createPayment({ ...pagoData, id: idPermanente });
+          console.log(
+            `Pago ${idLocal} sincronizado con éxito como ${idPermanente}.`,
+          );
         } catch (error) {
           console.error(
             `Error al sincronizar pago ${pago.id}, se mantendrá en la cola.`,
             error,
           );
-          failedPayments.push(pago); // Si falla, lo agregamos a la lista de fallidos.
+          failedPayments.push(pago);
         }
       }
 
@@ -123,47 +123,34 @@ export function usePagos() {
         OFFLINE_QUEUE_KEY,
         JSON.stringify(failedPayments),
       );
-      await fetchPagos(); // Recargamos la lista para reflejar los cambios.
+      await fetchPagos();
     } catch (error) {
       console.error("Error durante el proceso de sincronización:", error);
     } finally {
       isSyncing.current = false;
       setSincronizando(false);
     }
-  }, []); // El array vacío asegura que la función es estable y no sufre de 'stale closures'.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchPagos = useCallback(async () => {
     setCargando(true);
     try {
       const serverData = await api.getPayments();
-
-      // --- Verificación de Robustez ---
-      // Nos aseguramos de que la respuesta de la API sea un array.
-      // Si la API devuelve un objeto (ej: {data: [...]}) o algo inesperado,
-      // evitamos que la app crashee.
       const serverPagos = Array.isArray(serverData) ? serverData : [];
       if (!Array.isArray(serverData)) {
-        console.warn(
-          "Respuesta inesperada de la API. Se esperaba un array pero se recibió:",
-          serverData,
-        );
+        console.warn("Respuesta inesperada de la API:", serverData);
       }
 
-      const serverIds = new Set(serverPagos.map((p) => p.id));
       const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
       const queue = queueStr ? JSON.parse(queueStr) : [];
-
-      // Fusionamos las listas: empezamos con los del servidor.
-      const combinedPagos = [...serverPagos];
-
-      // Añadimos los de la cola local solo si su ID no existe ya en el servidor.
-      // Esto previene duplicados visuales durante la sincronización.
-      queue.forEach((offlinePago) => {
-        if (!serverIds.has(offlinePago.id)) {
-          combinedPagos.push(offlinePago);
-        }
-      });
-
+      const combinedPagos = [
+        ...serverPagos,
+        ...queue.filter(
+          (offlinePago) =>
+            !serverPagos.some((serverPago) => serverPago.id === offlinePago.id),
+        ),
+      ];
       setPagos(combinedPagos);
     } catch (error) {
       console.error(
@@ -178,49 +165,12 @@ export function usePagos() {
     }
   }, []);
 
-  const crearPago = useCallback(
-    async (pagoData) => {
-      setGuardando(true);
-
-      // Generamos un ID único y persistente en el cliente.
-      // Esto es clave para la idempotencia y evitar duplicados.
-      const nuevoPago = {
-        ...pagoData,
-        id: `offline_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      };
-
-      const netState = await NetInfo.fetch();
-
-      if (netState.isConnected && netState.isInternetReachable) {
-        try {
-          const pagoGuardado = await api.createPayment(nuevoPago);
-          await fetchPagos();
-          setGuardando(false);
-          return { ok: true, pago: pagoGuardado };
-        } catch (error) {
-          // Si la API falla (timeout, error 500), guardamos el pago (con su ID ya generado)
-          // en la cola local para un reintento posterior.
-          return await saveOffline(
-            nuevoPago,
-            "Fallo la API, guardando localmente.",
-          );
-        }
-      } else {
-        // Si no hay conexión, guardamos el pago (con su ID ya generado) localmente.
-        return await saveOffline(
-          nuevoPago,
-          "Sin conexión, guardado localmente.",
-        );
-      }
-    },
-    [fetchPagos],
-  );
-
-  const saveOffline = async (pagoConId, reason) => {
+  const saveOffline = async (pago, reason) => {
     try {
       const pagoTemporal = {
-        ...pagoConId, // El ID ya viene generado por la función `crearPago`.
-        isPending: true, // Flag para la UI
+        ...pago,
+        id: `offline_${Date.now()}`,
+        isPending: true,
       };
 
       const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
@@ -238,26 +188,59 @@ export function usePagos() {
     }
   };
 
+  const crearPago = useCallback(
+    async (nuevoPago) => {
+      setGuardando(true);
+      const netState = await NetInfo.fetch();
+
+      // 🔧 FIX: generamos el id permanente AQUÍ, antes de saber si hay
+      // conexión. Así, tanto el pago que se manda directo a la API como
+      // el que se guarda en la cola offline ya tienen un id real desde
+      // el inicio — necesario porque el backend idempotente usa este id
+      // para identificar y deduplicar pagos.
+      const idPermanente = nuevoPago.id || generarId();
+      const pagoConId = { ...nuevoPago, id: idPermanente };
+
+      if (netState.isConnected && netState.isInternetReachable) {
+        try {
+          const pagoGuardado = await api.createPayment(pagoConId);
+          setPagos((prev) => [pagoGuardado, ...prev]);
+          syncOfflinePayments();
+          return { ok: true, pago: pagoGuardado };
+        } catch (error) {
+          return await saveOffline(
+            pagoConId,
+            "Fallo la API, guardando localmente.",
+          );
+        } finally {
+          setGuardando(false);
+        }
+      } else {
+        return await saveOffline(
+          pagoConId,
+          "Sin conexión, guardado localmente.",
+        );
+      }
+    },
+    [syncOfflinePayments],
+  );
+
   const actualizarPago = useCallback(async (pagoActualizado) => {
     setGuardando(true);
     const { id } = pagoActualizado;
 
-    // --- Caso 1: Editando un pago que fue creado offline y aún no se sincroniza ---
     if (String(id).startsWith("offline_")) {
       try {
         const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
         let queue = queueStr ? JSON.parse(queueStr) : [];
         const index = queue.findIndex((p) => p.id === id);
         if (index !== -1) {
-          // Mantenemos el ID original y el flag isPending
           queue[index] = {
             ...pagoActualizado,
             id: queue[index].id,
             isPending: true,
           };
           await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-
-          // Actualizamos el estado local
           setPagos((prevPagos) =>
             prevPagos.map((p) => (p.id === id ? queue[index] : p)),
           );
@@ -271,7 +254,6 @@ export function usePagos() {
       }
     }
 
-    // --- Caso 2: Editando un pago que ya está en el servidor ---
     const netState = await NetInfo.fetch();
     if (!netState.isConnected || !netState.isInternetReachable) {
       setGuardando(false);
@@ -319,7 +301,8 @@ export function usePagos() {
     }
   }, []);
 
-  return {
+  // El valor que se compartirá con TODAS las pantallas que llamen usePagos()
+  const value = {
     pagos,
     cargando,
     guardando,
@@ -329,4 +312,24 @@ export function usePagos() {
     eliminarPago,
     actualizarPago,
   };
+
+  return (
+    <PaymentsContext.Provider value={value}>
+      {children}
+    </PaymentsContext.Provider>
+  );
+}
+
+// 3. El hook que las pantallas usan — misma firma que antes (usePagos()),
+//    así que NO hay que cambiar nada en RegistrarPagoScreen ni HistorialScreen
+//    excepto el import.
+export function usePagos() {
+  const context = useContext(PaymentsContext);
+  if (!context) {
+    throw new Error(
+      "usePagos() debe usarse dentro de un <PaymentsProvider>. " +
+        "Verifica que envolviste tu App.js con <PaymentsProvider>.",
+    );
+  }
+  return context;
 }

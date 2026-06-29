@@ -20,7 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
-import { usePagos } from "../hooks/usePayments";
+import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
 import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
@@ -81,8 +81,6 @@ export default function RegisterPayment() {
       }
     }
   };
-
-  const montoValido = !isNaN(parseFloat(monto)) && parseFloat(monto) > 0;
 
   return (
     <SafeAreaView style={estilos.contenedor} edges={["top"]}>
@@ -179,27 +177,6 @@ export default function RegisterPayment() {
           />
         </View>
 
-        {/* ── Resumen antes de guardar ── */}
-
-        {montoValido && (
-          <View style={estilos.resumen}>
-            <Text style={estilos.resumenTitulo}>Resumen del pago</Text>
-            <Row label="Cliente:" value={cliente} estilos={estilos} />
-            <Row
-              label="Monto:"
-              value={`${MONEDA} ${parseFloat(monto).toFixed(2)}`}
-              highlight
-              estilos={estilos}
-            />
-            <Row label="Método:" value={metodo} estilos={estilos} />
-            <Row
-              label="Fecha:"
-              value={fecha.split("-").reverse().join("/")}
-              estilos={estilos}
-            />
-          </View>
-        )}
-
         {/* ── Botón guardar ── */}
         <TouchableOpacity
           style={[estilos.boton, guardando && estilos.botonDeshabilitado]}
@@ -217,23 +194,6 @@ export default function RegisterPayment() {
         <View style={{ height: spacing.xl }} />
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-// Sub-componente de fila del resumen
-function Row({ label, value, highlight, estilos }) {
-  return (
-    <View style={estilos.resumenFila}>
-      <Text style={estilos.resumenLabel}>{label}</Text>
-      <Text
-        style={[
-          estilos.resumenValor,
-          highlight && estilos.resumenValorHighlight,
-        ]}
-      >
-        {value}
-      </Text>
-    </View>
   );
 }
 
@@ -302,38 +262,6 @@ const crearEstilos = (colors) =>
       fontWeight: font.black,
       color: colors.text,
       paddingVertical: spacing.md,
-    },
-    resumen: {
-      backgroundColor: colors.primaryLight,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.primaryBorder,
-      marginHorizontal: spacing.md,
-      marginTop: spacing.lg,
-      padding: spacing.md,
-    },
-    resumenTitulo: {
-      fontSize: 13,
-      fontWeight: font.black,
-      color: colors.primary,
-      marginBottom: spacing.sm,
-    },
-    resumenFila: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginTop: spacing.xs,
-    },
-    resumenLabel: {
-      fontSize: 14,
-      color: colors.textMuted,
-    },
-    resumenValor: {
-      fontSize: 14,
-      fontWeight: font.bold,
-      color: colors.text,
-    },
-    resumenValorHighlight: {
-      color: colors.success,
     },
     boton: {
       backgroundColor: colors.primary,

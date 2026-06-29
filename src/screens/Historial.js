@@ -16,11 +16,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-
-import ModalAlert from "../components/ModalAlert";
 import PaymentCard from "../components/PaymentCard";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { usePagos } from "../hooks/usePayments";
+import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
 import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
@@ -48,8 +46,6 @@ export default function Historial({ navigation }) {
   const [fechaBusqueda, setFechaBusqueda] = useState("");
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [actualizando, setActualizando] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalData, setModalData] = useState({ exito: true, mensaje: "" });
 
   useFocusEffect(
     useCallback(() => {
@@ -143,20 +139,13 @@ export default function Historial({ navigation }) {
 
   const handleEliminar = async (id) => {
     const result = await eliminarPago(id);
-
-    if (result.ok) {
-      setModalData({
-        exito: true,
-        mensaje: `Pago eliminado correctamente.`,
-      });
-      setModalVisible(true);
-      limpiar();
-    } else {
-      setModalData({
-        exito: false,
-        mensaje: result.message || "No se pudo eliminar. Verifica tu internet.",
-      });
-      setModalVisible(true);
+    // Si la eliminación falla, muestra una alerta.
+    // Si tiene éxito, la lista se actualiza automáticamente y no se muestra nada.
+    if (!result.ok) {
+      Alert.alert(
+        "Error al Eliminar",
+        result.message || "No se pudo eliminar. Verifica tu conexión.",
+      );
     }
   };
 
@@ -483,32 +472,6 @@ export default function Historial({ navigation }) {
           </View>
         </Modal>
       )}
-
-      {/* ── Modal de Confirmación Historial ── */}
-      <ModalAlert
-        visible={modalVisible}
-        icono={
-          modalData.exito ? (
-            <MaterialIcons
-              name="check-circle"
-              size={48}
-              color={themeColors.success}
-            />
-          ) : (
-            <MaterialIcons name="error" size={48} color={themeColors.danger} />
-          )
-        }
-        titulo={modalData.exito ? "¡Listo!" : "Error"}
-        mensaje={modalData.mensaje}
-        botones={[
-          {
-            texto: "Aceptar",
-            onPress: () => setModalVisible(false),
-            estilo: { backgroundColor: themeColors.primary },
-            estiloTexto: { color: "#FFF" },
-          },
-        ]}
-      />
     </SafeAreaView>
   );
 }

@@ -16,10 +16,11 @@ import EditPayment from "./src/screens/EditPayment";
 
 import { font, useAppTheme } from "./src/styles/theme";
 
+import { PaymentsProvider } from "./src/context/PaymentsContext";
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// ── Tabs interiores ──────────────────────────────────────────
 function MainTabs() {
   const themeColors = useAppTheme();
 
@@ -75,12 +76,10 @@ function MainTabs() {
   );
 }
 
-// ── Ícono emoji para los tabs ────────────────────────────────
 function TabIcon({ label }) {
   return <Text style={{ fontSize: 22 }}>{label}</Text>;
 }
 
-// ── Root Stack: Tabs + pantalla modal de edición ─────────────
 export default function App() {
   const scheme = useColorScheme();
 
@@ -98,7 +97,6 @@ export default function App() {
     cargarTema();
   }, []);
 
-  // Combinar nuestro tema personalizado con el de React Navigation
   const navigationTheme =
     scheme === "dark"
       ? {
@@ -111,21 +109,23 @@ export default function App() {
         };
 
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Pantalla principal con las dos tabs */}
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+    <PaymentsProvider>
+      <NavigationContainer theme={navigationTheme}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {/* Pantalla principal con las dos tabs */}
+          <Stack.Screen name="MainTabs" component={MainTabs} />
 
-        {/* Pantalla de edición: slide desde abajo en iOS, push en Android */}
-        <Stack.Screen
-          name="EditarPago"
-          component={EditPayment}
-          options={{
-            presentation: "card",
-            animation: "slide_from_right",
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* Pantalla de edición: slide desde abajo en iOS, push en Android */}
+          <Stack.Screen
+            name="EditarPago"
+            component={EditPayment}
+            options={{
+              presentation: "card",
+              animation: "slide_from_right",
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaymentsProvider>
   );
 }

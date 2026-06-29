@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
-import { usePagos } from "../hooks/usePayments";
+import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
 import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
