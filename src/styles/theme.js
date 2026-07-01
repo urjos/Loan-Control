@@ -1,9 +1,3 @@
-// ================================================================
-// 🎨  src/styles/theme.js
-// Tokens de diseño centralizados: colores, tipografía, espaciado.
-// Cambiar aquí afecta toda la app.
-// ================================================================
-
 import { useColorScheme } from "react-native";
 
 export const lightColors = {
