@@ -25,6 +25,9 @@ export const lightColors = {
   textMuted: "#64748B", // Texto secundario
   textLight: "#94A3B8", // Texto muy suave
 
+  // Color específico para los días deshabilitados del calendario en tema claro
+  calendarTextDisabled: "#A0AEC0",
+
   surface: "#FFFFFF", // Fondo de tarjetas
   background: "#F8FAFC", // Fondo de pantallas
   border: "#eef2f7", // Bordes
@@ -50,6 +53,9 @@ export const darkColors = {
   text: "#F8FAFC", // Texto principal blanco/gris claro
   textMuted: "#94A3B8",
   textLight: "#475569",
+
+  // Color específico para los días deshabilitados del calendario en tema oscuro
+  calendarTextDisabled: "#475569",
 
   surface: "#1e2229",
   background: "#0e0f0f",

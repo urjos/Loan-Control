@@ -11,38 +11,7 @@ import NetInfo from "@react-native-community/netinfo";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const api = {
-  getPayments: async () => {
-    const response = await fetch(`${API_URL}?action=get`);
-    if (!response.ok) throw new Error("Error al obtener pagos");
-    return await response.json();
-  },
-  createPayment: async (payment) => {
-    const response = await fetch(`${API_URL}?action=create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payment),
-    });
-    if (!response.ok) throw new Error("Error al crear el pago");
-    return await response.json();
-  },
-  updatePayment: async (id, payment) => {
-    const response = await fetch(`${API_URL}?action=update&id=${id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payment),
-    });
-    if (!response.ok) throw new Error("Error al actualizar el pago");
-    return await response.json();
-  },
-  deletePayment: async (id) => {
-    const response = await fetch(`${API_URL}?action=delete&id=${id}`, {
-      method: "POST",
-    });
-    if (!response.ok) throw new Error("Error al eliminar el pago");
-    return { ok: true };
-  },
-};
+import { api } from "../api/googleSheet";
 
 const OFFLINE_QUEUE_KEY = "offline_payments_queue";
 

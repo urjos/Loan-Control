@@ -13,6 +13,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import RegisterPayment from "./src/screens/RegisterPayment";
 import Historial from "./src/screens/Historial";
 import EditPayment from "./src/screens/EditPayment";
+import DishwashingCalendar from "./src/screens/DishwashingCalendar";
 
 import { font, useAppTheme } from "./src/styles/theme";
 
@@ -47,7 +48,7 @@ function MainTabs() {
         name="Registrar"
         component={RegisterPayment}
         options={{
-          tabBarLabel: "Registrar Pago",
+          tabBarLabel: "Registrar",
           tabBarIcon: () => (
             <MaterialIcons
               name="add-circle"
@@ -66,6 +67,21 @@ function MainTabs() {
           tabBarIcon: () => (
             <MaterialIcons
               name="history"
+              size={28}
+              color={themeColors.primary}
+            />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="CalendarioPlatos"
+        component={DishwashingCalendar}
+        options={{
+          tabBarLabel: "Calendario",
+          tabBarIcon: () => (
+            <MaterialIcons
+              name="kitchen"
               size={28}
               color={themeColors.primary}
             />

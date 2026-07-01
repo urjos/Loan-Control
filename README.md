@@ -8,12 +8,14 @@ Una aplicación móvil desarrollada en **React Native** (utilizando el entorno d
 - **Historial Detallado:** Vista completa del registro de transacciones pasadas.
 - **Edición Dinámica:** Sistema modal para modificar pagos existentes de forma rápida y fluida sin perder el contexto de la navegación principal.
 - **UI/UX Optimizado:** Navegación por pestañas (Bottom Tabs) con iconos claros y retroalimentación visual basada en un tema personalizado.
+- **📅 Calendario de Tareas:** Una nueva sección con un calendario para organizar tareas recurrentes (como lavar los platos) entre dos personas, con un ciclo de 2 días para cada una.
 
 ## 🛠️ Tecnologías Utilizadas
 
 - [React Native](https://reactnative.dev/)
 - [Expo](https://expo.dev/)
 - [React Navigation](https://reactnavigation.org/) (Native Stack & Bottom Tabs)
+- [React Native Calendars](https://github.com/wix/react-native-calendars)
 - [@expo/vector-icons](https://icons.expo.fyi/) (MaterialIcons)
 
 ## 🗺️ Arquitectura de Navegación
@@ -25,6 +27,7 @@ RootStack (Stack oculto)
  ├── MainTabs (Bottom Tabs - Pantalla Principal)
  │    ├── Tab "Register"  → RegisterPayment
  │    └── Tab "Historial"  → Historial
+ │    └── Tab "CalendarioPlatos" → DishwashingCalendar
  └── Modal "EditPayment"    → EditPayment
 ```
 
