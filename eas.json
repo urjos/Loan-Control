@@ -9,11 +9,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "packageManager": "pnpm",
       "env": {
         "EXPO_PUBLIC_API_URL": "@EXPO_PUBLIC_API_URL"
       }
     },
     "production": {
+      "packageManager": "pnpm",
       "env": {
         "EXPO_PUBLIC_API_URL": "@EXPO_PUBLIC_API_URL"
       }
