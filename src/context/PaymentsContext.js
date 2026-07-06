@@ -14,6 +14,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 import { api } from "../api/googleSheet";
 
 const OFFLINE_QUEUE_KEY = "offline_payments_queue";
+const CACHE_KEY = "payments_cache";
 
 const generarId = () =>
   `P_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -25,7 +26,8 @@ export function PaymentsProvider({ children }) {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
-  const isSyncing = useRef(false); // Único guard en toda la app — ya no hay condición de carrera entre pantallas.
+  const isSyncing = useRef(false);
+  const lastFetchTime = useRef(0);
 
   useEffect(() => {
     fetchPagos();
@@ -35,7 +37,6 @@ export function PaymentsProvider({ children }) {
       }
     });
     return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncOfflinePayments = useCallback(async () => {
@@ -64,11 +65,6 @@ export function PaymentsProvider({ children }) {
       const failedPayments = [];
       for (const pago of queue) {
         try {
-          // 🔧 FIX: el backend idempotente necesita un "id" real para
-          // poder detectar duplicados. Antes lo descartábamos aquí
-          // (`const { id, ...pagoData } = pago`), lo que dejaba el
-          // campo "id" vacío en el Sheet. Ahora generamos un id
-          // permanente y lo incluimos en el payload que se envía.
           const { id: idLocal, isPending, ...pagoData } = pago;
           const idPermanente = idLocal.startsWith("offline_")
             ? generarId()
@@ -98,40 +94,62 @@ export function PaymentsProvider({ children }) {
       isSyncing.current = false;
       setSincronizando(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchPagos = useCallback(async () => {
-    setCargando(true);
-    try {
-      const serverData = await api.getPayments();
-      const serverPagos = Array.isArray(serverData) ? serverData : [];
-      if (!Array.isArray(serverData)) {
-        console.warn("Respuesta inesperada de la API:", serverData);
+  const fetchPagos = useCallback(
+    async ({ force = false } = {}) => {
+      const ahora = Date.now();
+      const esFresco = ahora - lastFetchTime.current < 30_000;
+
+      if (!force && esFresco && pagos.length > 0) {
+        return;
       }
 
-      const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
-      const queue = queueStr ? JSON.parse(queueStr) : [];
-      const combinedPagos = [
-        ...serverPagos,
-        ...queue.filter(
-          (offlinePago) =>
-            !serverPagos.some((serverPago) => serverPago.id === offlinePago.id),
-        ),
-      ];
-      setPagos(combinedPagos);
-    } catch (error) {
-      console.error(
-        "Error de red al obtener pagos, cargando desde local:",
-        error,
-      );
-      const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
-      const queue = queueStr ? JSON.parse(queueStr) : [];
-      setPagos(queue);
-    } finally {
-      setCargando(false);
-    }
-  }, []);
+      setCargando(true);
+      try {
+        const serverData = await api.getPayments();
+        const serverPagos = Array.isArray(serverData) ? serverData : [];
+        if (!Array.isArray(serverData)) {
+          console.warn("Respuesta inesperada de la API:", serverData);
+        }
+
+        const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
+        const queue = queueStr ? JSON.parse(queueStr) : [];
+        const combinedPagos = [
+          ...serverPagos,
+          ...queue.filter(
+            (offlinePago) =>
+              !serverPagos.some(
+                (serverPago) => serverPago.id === offlinePago.id,
+              ),
+          ),
+        ];
+        setPagos(combinedPagos);
+
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(serverPagos));
+        lastFetchTime.current = Date.now();
+      } catch (error) {
+        console.error(
+          "Error de red al obtener pagos, cargando desde local:",
+          error,
+        );
+        const [cacheStr, queueStr] = await Promise.all([
+          AsyncStorage.getItem(CACHE_KEY),
+          AsyncStorage.getItem(OFFLINE_QUEUE_KEY),
+        ]);
+        const cache = cacheStr ? JSON.parse(cacheStr) : [];
+        const queue = queueStr ? JSON.parse(queueStr) : [];
+        const combinedOffline = [
+          ...queue,
+          ...cache.filter((c) => !queue.some((q) => q.id === c.id)),
+        ];
+        setPagos(combinedOffline);
+      } finally {
+        setCargando(false);
+      }
+    },
+    [pagos.length],
+  );
 
   const saveOffline = async (pago, reason) => {
     try {
@@ -160,23 +178,11 @@ export function PaymentsProvider({ children }) {
     async (nuevoPago) => {
       setGuardando(true);
       try {
-        // 🔧 FIX VELOCIDAD: antes, si había internet, esperábamos la
-        // respuesta de Google Apps Script (1-3s típicos) antes de
-        // mostrar el pago en pantalla. Ahora guardamos SIEMPRE primero
-        // en local —igual de rápido que el flujo offline— y disparamos
-        // la sincronización con el servidor en segundo plano.
-        //
-        // Ya no se necesita NetInfo.fetch() aquí: si hay conexión,
-        // syncOfflinePayments() lo subirá en segundo plano en cuanto
-        // termine de guardarse localmente. Si no hay conexión, se
-        // queda en la cola y se sincroniza solo cuando vuelva el internet.
         const resultado = await saveOffline(
           nuevoPago,
           "Guardado local instantáneo. Sincronizando con el servidor...",
         );
 
-        // Importante: NO usamos "await" aquí a propósito. La sync corre
-        // en paralelo sin bloquear el regreso a la pantalla.
         syncOfflinePayments();
 
         return resultado;
@@ -263,7 +269,6 @@ export function PaymentsProvider({ children }) {
     }
   }, []);
 
-  // El valor que se compartirá con TODAS las pantallas que llamen usePagos()
   const value = {
     pagos,
     cargando,
@@ -282,9 +287,6 @@ export function PaymentsProvider({ children }) {
   );
 }
 
-// 3. El hook que las pantallas usan — misma firma que antes (usePagos()),
-//    así que NO hay que cambiar nada en RegistrarPagoScreen ni HistorialScreen
-//    excepto el import.
 export function usePagos() {
   const context = useContext(PaymentsContext);
   if (!context) {

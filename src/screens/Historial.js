@@ -55,7 +55,7 @@ export default function Historial({ navigation }) {
 
   const onRefresh = async () => {
     setActualizando(true);
-    await fetchPagos();
+    await fetchPagos({ force: true });
     setActualizando(false);
   };
 

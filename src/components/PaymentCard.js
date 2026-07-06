@@ -19,8 +19,7 @@ const formatearFecha = (iso) => {
   const [y, m, d] = String(iso).split("-");
   return `${d}/${m}/${y}`;
 };
-
-export default function PaymentCard({ pago, onEditar, onEliminar }) {
+export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
   const [eliminando, setEliminando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -33,7 +32,14 @@ export default function PaymentCard({ pago, onEditar, onEliminar }) {
 
   return (
     <View style={styles.tarjeta}>
-      {/* ── Fila superior: nombre + monto ── */}
+      {isPending && (
+        <View style={styles.bannerOffline}>
+          <MaterialIcons name="wifi-off" size={12} color="#92400e" />
+          <Text style={styles.bannerOfflineTexto}>
+            Pendiente de sincronizar
+          </Text>
+        </View>
+      )}
       <View style={styles.filaSuperior}>
         <View style={styles.avatarContenedor}>
           <Text style={styles.avatarLetra}>
@@ -225,5 +231,20 @@ const crearEstilos = (colors) =>
       fontSize: 13,
       fontWeight: font.bold,
       color: colors.danger,
+    },
+    bannerOffline: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#FEF3C7",
+      paddingHorizontal: spacing.md,
+      paddingVertical: 5,
+      borderBottomWidth: 1,
+      borderBottomColor: "#FDE68A",
+    },
+    bannerOfflineTexto: {
+      fontSize: 11,
+      fontWeight: font.bold,
+      color: "#92400e",
     },
   });
