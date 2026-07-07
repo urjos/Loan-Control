@@ -40,7 +40,6 @@ const parsearNotificacionYape = (titulo, cuerpo) => {
   const REGEX_FORMATO_B =
     /^Yape!\s+(.+?)\s+te envió un pago por S\/\s*([\d.]+)/i;
 
-  // Intenta Formato B primero (nombre completo, más info)
   const match = cuerpo.match(REGEX_FORMATO_B) || cuerpo.match(REGEX_FORMATO_A);
   if (!match) return null;
 
@@ -49,9 +48,6 @@ const parsearNotificacionYape = (titulo, cuerpo) => {
 
   if (isNaN(monto) || monto <= 0) return null;
 
-  // Extrae solo el primer nombre (sin apellidos)
-  // "Cecilia Sanchez Rivera" → "Cecilia"
-  // "Cecilia San" → "Cecilia"
   const primerNombre = nombreCompleto.split(/\s+/)[0];
 
   return { primerNombre, monto };
@@ -98,9 +94,6 @@ const mostrarNotificacionLocal = async (titulo, cuerpo) => {
   });
 };
 
-// ── Función exportada para HeadlessJS (index.js) ─────────────────
-// Se ejecuta cuando llega una notificación con la app en segundo plano.
-// No puede usar hooks — llama a la API directamente.
 export const parsearYRegistrarPagoYape = async (notificacion) => {
   const { title: titulo, text: cuerpo } = notificacion;
 
@@ -115,33 +108,75 @@ export const parsearYRegistrarPagoYape = async (notificacion) => {
   const clienteEncontrado = encontrarCliente(primerNombre);
   const fecha = hoyISO();
 
-  const nuevoPago = {
-    fecha,
-    monto,
-    metodo: "Yape",
-    cliente: clienteEncontrado || `${primerNombre} (Yape - revisar)`,
-    estado: clienteEncontrado ? "Confirmado" : "Pendiente",
-  };
-
-  // Importamos la API directamente (sin contexto de React)
   const { api } = require("../api/googleSheet");
   const { generarId } = require("../context/PaymentsContext");
-  await api.createPayment({ ...nuevoPago, id: generarId() });
 
-  await mostrarNotificacionLocal(
-    clienteEncontrado
-      ? "✅ Pago registrado automáticamente"
-      : "⚠️ Pago de cliente no reconocido",
-    clienteEncontrado
-      ? `${clienteEncontrado} · S/ ${monto.toFixed(2)} vía Yape`
-      : `"${primerNombre}" no está en tu lista. Revisa el historial.`,
-  );
+  let pagoExistentePendiente = null;
+  try {
+    const pagosExistentes = await api.getPayments();
+    if (Array.isArray(pagosExistentes)) {
+      pagoExistentePendiente = pagosExistentes.find(
+        (p) =>
+          p.cliente === clienteEncontrado &&
+          p.fecha === fecha &&
+          String(p.estado).toLowerCase() === "pendiente",
+      );
+    }
+  } catch (e) {
+    console.warn("[Yape] No se pudo consultar pagos existentes:", e.message);
+  }
+
+  if (clienteEncontrado) {
+    if (pagoExistentePendiente) {
+      // ── CASO A: ya había un pendiente hoy → actualizamos ese ──
+      await api.updatePayment(pagoExistentePendiente.id, {
+        ...pagoExistentePendiente,
+        monto,
+        metodo: "Yape",
+        estado: "Confirmado",
+      });
+
+      await mostrarNotificacionLocal(
+        "✅ Pago confirmado automáticamente",
+        `Pago pendiente de ${clienteEncontrado} actualizado a S/ ${monto.toFixed(2)} vía Yape`,
+      );
+    } else {
+      await api.createPayment({
+        id: generarId(),
+        fecha,
+        monto,
+        metodo: "Yape",
+        cliente: clienteEncontrado,
+        estado: "Confirmado",
+      });
+
+      await mostrarNotificacionLocal(
+        "✅ Pago registrado automáticamente",
+        `${clienteEncontrado} · S/ ${monto.toFixed(2)} vía Yape`,
+      );
+    }
+  } else {
+    await api.createPayment({
+      id: generarId(),
+      fecha,
+      monto,
+      metodo: "Yape",
+      cliente: `${primerNombre} (Yape - revisar)`,
+      estado: "Pendiente",
+    });
+
+    await mostrarNotificacionLocal(
+      "⚠️ Pago de cliente no reconocido",
+      `"${primerNombre}" no está en tu lista. Revisa el historial.`,
+    );
+  }
 };
 
+// ── Hook principal ─────────────────────────────────────────────────
 export function useYapeListener() {
   if (Platform.OS !== "android") return { permisoOtorgado: false };
 
-  const { crearPago } = usePagos();
+  const { crearPago, actualizarPago, pagos } = usePagos();
 
   const solicitarPermiso = useCallback(async () => {
     try {
@@ -171,17 +206,13 @@ export function useYapeListener() {
     }
   }, []);
 
-  // Procesar una notificación de Yape recibida
   const procesarNotificacion = useCallback(
     async (notificacion) => {
       try {
         const { title: titulo, text: cuerpo, app } = notificacion;
 
-        // Filtramos solo notificaciones de Yape
-        // El package name de Yape en Android es pe.com.bcp.innovacxion.yapeapp
         const esYape =
           app?.toLowerCase().includes("yape") || titulo === YAPE_TITULO;
-
         if (!esYape) return;
 
         const resultado = parsearNotificacionYape(titulo, cuerpo);
@@ -189,64 +220,69 @@ export function useYapeListener() {
 
         const { primerNombre, monto } = resultado;
         const clienteEncontrado = encontrarCliente(primerNombre);
+        const fecha = hoyISO();
 
-        // ── Caso 1: cliente conocido → registrar pago confirmado ──
         if (clienteEncontrado) {
-          const nuevoPago = {
-            fecha: hoyISO(),
-            cliente: clienteEncontrado,
-            monto: monto,
-            metodo: "Yape",
-            estado: "Confirmado",
-          };
-
-          await crearPago(nuevoPago);
-
-          await mostrarNotificacionLocal(
-            "✅ Pago registrado automáticamente",
-            `${clienteEncontrado} · S/ ${monto.toFixed(2)} vía Yape`,
+          const pendienteHoy = pagos.find(
+            (p) =>
+              p.cliente === clienteEncontrado &&
+              p.fecha === fecha &&
+              String(p.estado).toLowerCase() === "pendiente",
           );
 
-          console.log(
-            `[Yape] Pago registrado: ${clienteEncontrado} S/ ${monto}`,
-          );
-        }
+          if (pendienteHoy) {
+            // ── CASO A: había pendiente hoy → actualizar ──
+            await actualizarPago({
+              ...pendienteHoy,
+              monto,
+              metodo: "Yape",
+              estado: "Confirmado",
+            });
 
-        // ── Caso 2: cliente desconocido → registrar con aviso ──
-        else {
-          const nombreConAviso = `${primerNombre} (Yape - revisar)`;
-          const nuevoPago = {
-            fecha: hoyISO(),
-            cliente: nombreConAviso,
-            monto: monto,
+            await mostrarNotificacionLocal(
+              "✅ Pago confirmado automáticamente",
+              `Pago pendiente de ${clienteEncontrado} actualizado a S/ ${monto.toFixed(2)} vía Yape`,
+            );
+          } else {
+            // ── CASO B: no había pendiente hoy → crear nuevo ──
+            await crearPago({
+              fecha,
+              cliente: clienteEncontrado,
+              monto,
+              metodo: "Yape",
+              estado: "Confirmado",
+            });
+
+            await mostrarNotificacionLocal(
+              "✅ Pago registrado automáticamente",
+              `${clienteEncontrado} · S/ ${monto.toFixed(2)} vía Yape`,
+            );
+          }
+        } else {
+          await crearPago({
+            fecha,
+            cliente: `${primerNombre} (Yape - revisar)`,
+            monto,
             metodo: "Yape",
             estado: "Pendiente",
-          };
-
-          await crearPago(nuevoPago);
+          });
 
           await mostrarNotificacionLocal(
             "⚠️ Pago de cliente no reconocido",
             `"${primerNombre}" no está en tu lista. Revisa el historial.`,
-          );
-
-          console.log(
-            `[Yape] Cliente no reconocido: "${primerNombre}" S/ ${monto}`,
           );
         }
       } catch (e) {
         console.error("[Yape] Error procesando notificación:", e.message);
       }
     },
-    [crearPago],
+    [crearPago, actualizarPago, pagos],
   );
 
-  // Iniciar el listener al montar la app
   useEffect(() => {
     let suscripcion = null;
 
     const iniciar = async () => {
-      // Configura expo-notifications para mostrar alertas en primer plano
       await Notifications.setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
@@ -261,13 +297,8 @@ export function useYapeListener() {
       try {
         const RNNotificationListener = require("react-native-notification-listener");
 
-        // startListening arranca el servicio en segundo plano
         await RNNotificationListener.default.startListening();
 
-        // getNotifications no es event-driven en este paquete:
-        // usa un HeadlessJS task. Necesitamos registrar la tarea
-        // directamente en index.js (ver instrucciones abajo).
-        // Aquí solo guardamos referencia para el cleanup.
         suscripcion = {
           remove: () => RNNotificationListener.default.stopListening(),
         };
@@ -280,7 +311,6 @@ export function useYapeListener() {
 
     iniciar();
 
-    // Limpieza al desmontar
     return () => {
       if (suscripcion) {
         suscripcion.remove();
