@@ -16,11 +16,20 @@ import EditPayment from "./src/screens/EditPayment";
 import DishwashingCalendar from "./src/screens/DishwashingCalendar";
 
 import { font, useAppTheme } from "./src/styles/theme";
-
 import { PaymentsProvider } from "./src/context/PaymentsContext";
+
+// 🔔 Hook de Yape — solo activo en Android
+import { useYapeListener } from "./src/hooks/useYapeListener";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+// Componente interno que activa el listener DENTRO del PaymentsProvider,
+// porque useYapeListener necesita acceso a crearPago() del contexto.
+function YapeListenerActivator() {
+  useYapeListener();
+  return null; // no renderiza nada, solo activa el efecto
+}
 
 function MainTabs() {
   const themeColors = useAppTheme();
@@ -35,7 +44,6 @@ function MainTabs() {
           backgroundColor: themeColors.surface,
           borderTopColor: themeColors.border,
           paddingBottom: Platform.OS === "ios" ? 40 : 8,
-          height: Platform.OS === "ios" ? 80 : 62,
           height: Platform.OS === "android" ? 70 : 62,
         },
         tabBarLabelStyle: {
@@ -58,7 +66,6 @@ function MainTabs() {
           ),
         }}
       />
-
       <Tab.Screen
         name="Historial"
         component={Historial}
@@ -73,7 +80,6 @@ function MainTabs() {
           ),
         }}
       />
-
       <Tab.Screen
         name="CalendarioPlatos"
         component={DishwashingCalendar}
@@ -92,10 +98,6 @@ function MainTabs() {
   );
 }
 
-function TabIcon({ label }) {
-  return <Text style={{ fontSize: 22 }}>{label}</Text>;
-}
-
 export default function App() {
   const scheme = useColorScheme();
 
@@ -103,9 +105,7 @@ export default function App() {
     const cargarTema = async () => {
       try {
         const temaGuardado = await AsyncStorage.getItem("temaApp");
-        if (temaGuardado) {
-          Appearance.setColorScheme(temaGuardado);
-        }
+        if (temaGuardado) Appearance.setColorScheme(temaGuardado);
       } catch (error) {
         console.log("Error al cargar el tema:", error);
       }
@@ -115,10 +115,7 @@ export default function App() {
 
   const navigationTheme =
     scheme === "dark"
-      ? {
-          ...DarkTheme,
-          colors: { ...DarkTheme.colors, background: "#0F172A" },
-        }
+      ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: "#0F172A" } }
       : {
           ...DefaultTheme,
           colors: { ...DefaultTheme.colors, background: "#F8FAFC" },
@@ -126,19 +123,15 @@ export default function App() {
 
   return (
     <PaymentsProvider>
+      <YapeListenerActivator />
+
       <NavigationContainer theme={navigationTheme}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {/* Pantalla principal con las dos tabs */}
           <Stack.Screen name="MainTabs" component={MainTabs} />
-
-          {/* Pantalla de edición: slide desde abajo en iOS, push en Android */}
           <Stack.Screen
             name="EditarPago"
             component={EditPayment}
-            options={{
-              presentation: "card",
-              animation: "slide_from_right",
-            }}
+            options={{ presentation: "card", animation: "slide_from_right" }}
           />
         </Stack.Navigator>
       </NavigationContainer>

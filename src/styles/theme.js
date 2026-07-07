@@ -19,7 +19,6 @@ export const lightColors = {
   textMuted: "#64748B", // Texto secundario
   textLight: "#94A3B8", // Texto muy suave
 
-  // Color específico para los días deshabilitados del calendario en tema claro
   calendarTextDisabled: "#A0AEC0",
 
   surface: "#FFFFFF", // Fondo de tarjetas
