@@ -1,79 +1,69 @@
-// src/hooks/useYapeListener.js
-//
-// Hook que escucha las notificaciones de Yape en tiempo real,
-// parsea el nombre y monto, y registra el pago automáticamente.
-//
-// REQUISITOS:
-//   - react-native-notification-listener  (pnpm add react-native-notification-listener)
-//   - expo-notifications                  (npx expo install expo-notifications)
-//   - El usuario debe otorgar permiso de "Acceso a notificaciones" en Ajustes de Android
-//
-// FORMATOS SOPORTADOS (según notificaciones reales de Yape):
-//   Formato A: "Cecilia San* te envió un pago por S/ 20. El cód. de seguridad es: 163"
-//   Formato B: "Yape! Cecilia  Sanchez Rivera te envió un pago por S/ 500"
-
 import { useEffect, useCallback } from "react";
 import { Platform, Alert } from "react-native";
 import * as Notifications from "expo-notifications";
-import { CLIENTES } from "../config/constants";
+import { CLIENTES, YAPE_CLIENT_MAP } from "../config/constants";
 import { usePagos } from "../context/PaymentsContext";
 
-// Título exacto que usan las notificaciones de Yape de cobro
 const YAPE_TITULO = "Confirmación de Pago";
 
-// ── Parser ────────────────────────────────────────────────────────
-//
-// Extrae { primerNombre, monto } del texto de la notificación.
-// Devuelve null si el texto no corresponde a un pago de Yape.
-//
-// Regex Formato A: "Cecilia San* te envió un pago por S/ 20..."
-//   Captura: grupo 1 = "Cecilia San", grupo 2 = "20"
-//
-// Regex Formato B: "Yape! Cecilia  Sanchez Rivera te envió un pago por S/ 500"
-//   Captura: grupo 1 = "Cecilia  Sanchez Rivera", grupo 2 = "500"
-//
 const parsearNotificacionYape = (titulo, cuerpo) => {
   if (!titulo || !cuerpo) return null;
   if (titulo.trim() !== YAPE_TITULO) return null;
 
-  const REGEX_FORMATO_A = /^(.+?)\*?\s+te envió un pago por S\/\s*([\d.]+)/i;
+  const REGEX_FORMATO_A =
+    /^(.+?)\s+([A-Za-záéíóúÁÉÍÓÚñÑ]+)\*\s+te envió un pago por S\/\s*([\d.]+)/i;
   const REGEX_FORMATO_B =
-    /^Yape!\s+(.+?)\s+te envió un pago por S\/\s*([\d.]+)/i;
+    /^Yape!\s+(.+?)\s+([A-Za-záéíóúÁÉÍÓÚñÑ]+)\s+\S*\s+te envió un pago por S\/\s*([\d.]+)/i;
 
-  const match = cuerpo.match(REGEX_FORMATO_B) || cuerpo.match(REGEX_FORMATO_A);
-  if (!match) return null;
+  let primerNombre, apellidoPrefijo, monto;
 
-  const nombreCompleto = match[1].trim().replace(/\*/g, ""); // quita el *
-  const monto = parseFloat(match[2]);
+  const matchB = cuerpo.match(REGEX_FORMATO_B);
+  const matchA = cuerpo.match(REGEX_FORMATO_A);
+
+  if (matchB) {
+    primerNombre = matchB[1].trim();
+    apellidoPrefijo = matchB[2].trim();
+    monto = parseFloat(matchB[3]);
+  } else if (matchA) {
+    primerNombre = matchA[1].trim();
+    apellidoPrefijo = matchA[2].trim();
+    monto = parseFloat(matchA[3]);
+  } else {
+    return null;
+  }
 
   if (isNaN(monto) || monto <= 0) return null;
 
-  const primerNombre = nombreCompleto.split(/\s+/)[0];
-
-  return { primerNombre, monto };
+  return { primerNombre, apellidoPrefijo, monto };
 };
 
-// ── Matching de cliente ───────────────────────────────────────────
-//
-// Compara el primer nombre del pagador con la lista de CLIENTES,
-// ignorando mayúsculas y tildes.
-// "cecilia" === "Cecilia" ✓   "vilma" === "Vilma" ✓
-//
 const normalizar = (texto) =>
   texto
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // quita tildes
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 
-const encontrarCliente = (primerNombre) => {
+const normalizar = (texto) =>
+  texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const encontrarCliente = (primerNombre, apellidoPrefijo) => {
   const nombreNorm = normalizar(primerNombre);
+  const apellidoNorm = normalizar(apellidoPrefijo);
+
+  const matchExacto = YAPE_CLIENT_MAP.find(
+    (m) =>
+      normalizar(m.yapeNombre) === nombreNorm &&
+      apellidoNorm.startsWith(normalizar(m.yapeApellidoPrefix)),
+  );
+  if (matchExacto) return matchExacto.appNombre;
+
   return (
-    CLIENTES.find((cliente) => {
-      // Compara con el primer nombre del cliente en la app
-      const primerNombreCliente = cliente.split(" ")[0];
-      return normalizar(primerNombreCliente) === nombreNorm;
-    }) || null
+    CLIENTES.find((c) => normalizar(c.split(" ")[0]) === nombreNorm) || null
   );
 };
 
@@ -104,8 +94,8 @@ export const parsearYRegistrarPagoYape = async (notificacion) => {
   const resultado = parsearNotificacionYape(titulo, cuerpo);
   if (!resultado) return;
 
-  const { primerNombre, monto } = resultado;
-  const clienteEncontrado = encontrarCliente(primerNombre);
+  const { primerNombre, apellidoPrefijo, monto } = resultado;
+  const clienteEncontrado = encontrarCliente(primerNombre, apellidoPrefijo);
   const fecha = hoyISO();
 
   const { api } = require("../api/googleSheet");
@@ -218,8 +208,11 @@ export function useYapeListener() {
         const resultado = parsearNotificacionYape(titulo, cuerpo);
         if (!resultado) return;
 
-        const { primerNombre, monto } = resultado;
-        const clienteEncontrado = encontrarCliente(primerNombre);
+        const { primerNombre, apellidoPrefijo, monto } = resultado;
+        const clienteEncontrado = encontrarCliente(
+          primerNombre,
+          apellidoPrefijo,
+        );
         const fecha = hoyISO();
 
         if (clienteEncontrado) {
