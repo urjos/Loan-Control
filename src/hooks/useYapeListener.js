@@ -44,13 +44,6 @@ const normalizar = (texto) =>
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 
-const normalizar = (texto) =>
-  texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-
 const encontrarCliente = (primerNombre, apellidoPrefijo) => {
   const nombreNorm = normalizar(primerNombre);
   const apellidoNorm = normalizar(apellidoPrefijo);

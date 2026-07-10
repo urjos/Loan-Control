@@ -16,7 +16,7 @@ import { api } from "../api/googleSheet";
 const OFFLINE_QUEUE_KEY = "offline_payments_queue";
 const CACHE_KEY = "payments_cache";
 
-const generarId = () =>
+export const generarId = () =>
   `P_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 const PaymentsContext = createContext(null);
