@@ -26,5 +26,8 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@expo/config-plugins": "^57.0.3"
+  }
 }

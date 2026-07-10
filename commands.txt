@@ -1,2 +1,5 @@
 npx expo install --check
 eas build -p android --profile preview
+
+// list all in progress builds
+eas build:list --status=in-queue

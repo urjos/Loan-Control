@@ -1,6 +1,50 @@
-// app.config.js
-export default {
-  expo: {
+const { withAndroidManifest } = require("@expo/config-plugins");
+
+const NOTIFICATION_SERVICE_CLASS =
+  "com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener";
+
+const withYapeNotificationListener = (config) => {
+  return withAndroidManifest(config, (config) => {
+    const manifest = config.modResults.manifest;
+    const application = manifest.application[0];
+
+    if (!application.service) application.service = [];
+
+    const yaExiste = application.service.some(
+      (s) => s.$["android:name"] === NOTIFICATION_SERVICE_CLASS,
+    );
+
+    if (!yaExiste) {
+      application.service.push({
+        $: {
+          "android:name": NOTIFICATION_SERVICE_CLASS,
+          "android:label": "@string/app_name",
+          "android:permission":
+            "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+          "android:exported": "true",
+        },
+        "intent-filter": [
+          {
+            action: [
+              {
+                $: {
+                  "android:name":
+                    "android.service.notification.NotificationListenerService",
+                },
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    return config;
+  });
+};
+
+export default ({ config }) => {
+  const appConfig = {
+    ...config,
     name: "Control Prestamos",
     slug: "ControlPrestamos",
     version: "3.0.0",
@@ -17,7 +61,7 @@ export default {
       supportsTablet: true,
     },
     android: {
-      versionCode: 3,
+      versionCode: 4,
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#ffffff",
@@ -30,7 +74,7 @@ export default {
     },
     plugins: [
       "@react-native-community/datetimepicker",
-      "./plugins/withYapeNotificationListener",
+      // Plugin inlineado arriba — ya no referencia al archivo externo
     ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
@@ -38,5 +82,8 @@ export default {
         projectId: "a5bb2cdb-423f-421b-b813-91635032e9e2",
       },
     },
-  },
+  };
+
+  // Aplica el plugin de notificaciones directamente
+  return withYapeNotificationListener(appConfig);
 };

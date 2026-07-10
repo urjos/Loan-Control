@@ -1,19 +1,9 @@
-// plugins/withYapeNotificationListener.js
-//
-// Plugin de Expo que inyecta el servicio NotificationListenerService
-// en el AndroidManifest.xml durante el build de EAS.
-//
-// Sin este plugin, Android no le dará acceso a la app para leer
-// las notificaciones de otras apps (como Yape).
-//
-// Se ejecuta automáticamente cuando corres: eas build -p android
+const { withAndroidManifest } = require(
+  require.resolve("@expo/config-plugins", {
+    paths: [require.resolve("expo/package.json").replace("package.json", "")],
+  }),
+);
 
-const { withAndroidManifest } = require("@expo/config-plugins");
-
-// Clase Java del servicio dentro de react-native-notification-listener.
-// Si el build falla con "ClassNotFoundException", corre este comando
-// para verificar el nombre exacto:
-//   find node_modules/react-native-notification-listener/android -name "*.java" | head -5
 const NOTIFICATION_SERVICE_CLASS =
   "com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener";
 
