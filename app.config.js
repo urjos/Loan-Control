@@ -42,6 +42,22 @@ const withYapeNotificationListener = (config) => {
   });
 };
 
+const withAllowBackupFix = (config) => {
+  return withAndroidManifest(config, (config) => {
+    const manifest = config.modResults.manifest;
+    const application = manifest.application[0];
+
+    if (!manifest.$["xmlns:tools"]) {
+      manifest.$["xmlns:tools"] = "http://schemas.android.com/tools";
+    }
+
+    application.$["tools:replace"] = "android:allowBackup";
+    application.$["android:allowBackup"] = "false";
+
+    return config;
+  });
+};
+
 export default ({ config }) => {
   const appConfig = {
     ...config,
@@ -61,7 +77,7 @@ export default ({ config }) => {
       supportsTablet: true,
     },
     android: {
-      versionCode: 4,
+      versionCode: 5,
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#ffffff",
@@ -72,10 +88,7 @@ export default ({ config }) => {
     web: {
       favicon: "./assets/favicon.png",
     },
-    plugins: [
-      "@react-native-community/datetimepicker",
-      // Plugin inlineado arriba — ya no referencia al archivo externo
-    ],
+    plugins: ["@react-native-community/datetimepicker"],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
       eas: {
@@ -84,6 +97,5 @@ export default ({ config }) => {
     },
   };
 
-  // Aplica el plugin de notificaciones directamente
-  return withYapeNotificationListener(appConfig);
+  return withAllowBackupFix(withYapeNotificationListener(appConfig));
 };
