@@ -1,6 +1,13 @@
 import { useEffect, useCallback } from "react";
 import { Platform, Alert } from "react-native";
-import * as Notifications from "expo-notifications";
+// Importamos solo los submódulos que usamos en lugar del índice del paquete.
+// Motivo: `import * as Notifications from "expo-notifications"` carga en
+// Android `ExpoTopicSubscriptionModule` (aunque no se use) y la app crashea si
+// el runtime nativo no lo incluye (p. ej. Expo Go / builds antiguas):
+// "Cannot find native module 'ExpoTopicSubscriptionModule'".
+// Estos dos submódulos usan módulos nativos que sí están disponibles.
+import { setNotificationHandler } from "expo-notifications/build/NotificationsHandler";
+import { scheduleNotificationAsync } from "expo-notifications/build/scheduleNotificationAsync";
 import { CLIENTES, YAPE_CLIENT_MAP } from "../config/constants";
 import { usePagos } from "../context/PaymentsContext";
 
@@ -71,7 +78,7 @@ const hoyISO = () => {
 
 // ── Notificación local ─────────────────────────────────────────────
 const mostrarNotificacionLocal = async (titulo, cuerpo) => {
-  await Notifications.scheduleNotificationAsync({
+  await scheduleNotificationAsync({
     content: { title: titulo, body: cuerpo, sound: true },
     trigger: null, // inmediata
   });
@@ -269,7 +276,7 @@ export function useYapeListener() {
     let suscripcion = null;
 
     const iniciar = async () => {
-      await Notifications.setNotificationHandler({
+      await setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
           shouldPlaySound: true,
