@@ -1,41 +1,111 @@
-// ================================================================
-// 👤  src/components/ClienteSelector.js
-// Selector de cliente en forma de chips/píldoras tocables.
-// ================================================================
-
-import React from "react";
-import { Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  Platform,
+  SafeAreaView,
+  useColorScheme,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function ClienteSelector({ clientes, seleccionado, onChange }) {
+  const [visible, setVisible] = useState(false);
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+
+  if (Platform.OS === "android") {
+    return (
+      <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm h-[58px]">
+        <MaterialIcons
+          name="person"
+          size={22}
+          color={isDark ? "#94A3B8" : "#64748B"}
+          style={{ marginRight: 8 }}
+        />
+        <Picker
+          selectedValue={seleccionado}
+          onValueChange={(itemValue) => onChange(itemValue)}
+          style={{
+            flex: 1,
+            color: isDark ? "#F8FAFC" : "#0F172A",
+          }}
+          dropdownIconColor={isDark ? "#94A3B8" : "#64748B"}
+          mode="dialog"
+        >
+          {clientes.map((c) => (
+            <Picker.Item key={c} label={c} value={c} />
+          ))}
+        </Picker>
+        <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
+          ›
+        </Text>
+      </View>
+    );
+  }
+
+  // iOS: Modal con picker inline + botón "Listo" (idéntico al patrón de DatePickerField)
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerClassName="px-4 gap-2 flex-row"
-    >
-      {clientes.map((nombre) => {
-        const activo = seleccionado === nombre;
-        return (
+    <View>
+      <TouchableOpacity
+        className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 py-4 shadow-sm"
+        onPress={() => setVisible(true)}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons
+          name="person"
+          size={22}
+          color={isDark ? "#94A3B8" : "#64748B"}
+          style={{ marginRight: 8 }}
+        />
+        <Text className="flex-1 text-base font-bold text-text dark:text-dark-text">
+          {seleccionado}
+        </Text>
+        <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
+          ›
+        </Text>
+      </TouchableOpacity>
+
+      {Platform.OS === "ios" && (
+        <Modal
+          transparent
+          visible={visible}
+          animationType="slide"
+          onRequestClose={() => setVisible(false)}
+        >
           <TouchableOpacity
-            key={nombre}
-            className={`px-4 py-2 rounded-full border-[1.5px] ${
-              activo
-                ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
-                : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
-            }`}
-            onPress={() => onChange(nombre)}
-            activeOpacity={0.75}
-          >
-            <Text
-              className={`text-sm font-bold ${
-                activo ? "text-white" : "text-textMuted dark:text-dark-textMuted"
-              }`}
+            className="flex-1 bg-black/30"
+            activeOpacity={1}
+            onPress={() => setVisible(false)}
+          />
+          <SafeAreaView className="bg-surface dark:bg-dark-surface rounded-t-lg shadow-md">
+            <View className="flex-row justify-between items-center px-4 py-4 border-b border-border dark:border-dark-border">
+              <Text className="text-base font-bold text-text dark:text-dark-text">
+                Selecciona un cliente
+              </Text>
+              <TouchableOpacity
+                onPress={() => setVisible(false)}
+                className="px-2 py-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
+              >
+                <Text className="text-primary dark:text-dark-primary font-bold text-[15px]">
+                  Listo
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Picker
+              selectedValue={seleccionado}
+              onValueChange={(itemValue) => onChange(itemValue)}
+              itemStyle={{ color: isDark ? "#F8FAFC" : "#0F172A" }}
             >
-              {nombre}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+              {clientes.map((c) => (
+                <Picker.Item key={c} label={c} value={c} />
+              ))}
+            </Picker>
+          </SafeAreaView>
+        </Modal>
+      )}
+    </View>
   );
 }

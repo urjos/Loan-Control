@@ -5,39 +5,35 @@ change.
 
 ## Current Phase
 
-- Complete: Migración a NativeWind v4 con Tailwind CSS (`01-tailwind-migration.md`)
+- Complete: Implementación de Selector de Cliente Nativo con Picker (`02-select-implementation.md`)
 
 ## Current Goal
 
-- Migración del sistema de estilos de `StyleSheet.create()` y tokens vía `useAppTheme()` a NativeWind v4 con clases utilitarias de Tailwind CSS y soporte dark mode nativo.
+- Reemplazar el selector horizontal de chips/píldoras (`ClienteSelector.js`) por un selector consistente con los inputs de formulario utilizando `@react-native-picker/picker`, con diálogo nativo en Android y modal inferior en iOS.
 
 ## Completed
 
-- **Configuración de NativeWind v4 y Tailwind CSS:**
-  - Dependencias instaladas: `nativewind`, `tailwindcss`, `react-native-css-interop`.
-  - Configuración de `tailwind.config.js` con preset `nativewind/preset`, `darkMode: 'media'` y tokens centralizados (colors, spacing, borderRadius, fontWeight).
-  - Configuración de `babel.config.js` (`nativewind/babel` y `jsxImportSource: 'nativewind'`).
-  - Configuración de `metro.config.js` con `withNativeWind` procesando `global.css`.
-  - Archivo de tipos `nativewind-env.d.ts` con `/// <reference types="nativewind/types" />`.
-  - Importación de `./global.css` en `App.js`.
-- **Migración de Componentes Atómicos:**
-  - `src/components/ClienteSelector.js`: Reemplazo de StyleSheet por `className`, soporte dark mode y estado activo.
-  - `src/components/DatePickerField.js`: Eliminación de StyleSheet y `useAppTheme`, estilos con clases Tailwind, modal iOS y selector nativo.
-  - `src/components/ModalAlert.js`: Reemplazo de StyleSheet y `useAppTheme` por clases Tailwind con soporte dark mode.
-  - `src/components/PaymentCard.js`: Eliminación de StyleSheet y `useAppTheme`, clases de Tailwind para estado pendiente/confirmado, dark mode y modal de confirmación.
-- **Migración de Pantallas:**
-  - `src/screens/RegisterPayment.js`: Eliminación de StyleSheet y `useAppTheme`, clases Tailwind, prefijo `dark:` y alternancia de tema.
-  - `src/screens/Historial.js`: Eliminación de StyleSheet y `useAppTheme`, clases Tailwind, prefijo `dark:`, controles, buscador y filtros.
-  - `src/screens/EditPayment.js`: Eliminación de StyleSheet y `useAppTheme`, clases Tailwind y prefijos `dark:`.
-  - `src/screens/DishwashingCalendar.js`: Eliminación de `StyleSheet.create()`, migración completa de la UI a clases Tailwind preservando `useAppTheme` únicamente para la configuración requerida por `react-native-calendars`.
+- **Migración a NativeWind v4 (`01-tailwind-migration.md`):**
+  - Configuración completa de NativeWind v4, Tailwind CSS y `react-native-css-interop`.
+  - Migración de todos los componentes y pantallas a clases de Tailwind con soporte para dark mode.
+  - Eliminación del 100% de `StyleSheet.create()` en `src/`.
+- **Implementación de Selector de Cliente Nativo (`02-select-implementation.md`):**
+  - Instalación de `@react-native-picker/picker` en `package.json`.
+  - Refactorización de [ClienteSelector.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/components/ClienteSelector.js):
+    - Mantiene exactamente la misma API y props `{ clientes, seleccionado, onChange }` (cero modificaciones necesarias en [RegisterPayment.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/screens/RegisterPayment.js) o [EditPayment.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/screens/EditPayment.js)).
+    - Eliminado por completo `ScrollView` y chips horizontales.
+    - Ícono `MaterialIcons name="person"` a la izquierda y chevron `›` a la derecha.
+    - Rama `Platform.OS === 'android'`: renderizado directo del `Picker` en modo `dialog` dentro del contenedor con altura, bordes y estilos idénticos al resto de inputs.
+    - Rama `Platform.OS === 'ios'`: trigger táctil que abre un `Modal` inferior con botón "Listo" y el `Picker`, siguiendo el patrón de `DatePickerField.js`.
+    - Estilo visual idéntico a los inputs de monto y fecha (`bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm`).
 - **Verificación de Criterios de Evaluación:**
-  - ✅ 1. Sin `StyleSheet.create()` en `src/`.
-  - ✅ 2. Sin `useAppTheme()` en componentes UI (`DishwashingCalendar.js` es la única pantalla que lo conserva para el objeto theme del calendario).
-  - ✅ 3. Sin `color: themeColors` en estilos inline.
-  - ✅ 4. Tokens requeridos definidos en `tailwind.config.js` (`primary`, `surface`, `text`, `textMuted`, `border`, etc.).
-  - ✅ 5. Dark mode configurado con `darkMode: 'media'` y clases `dark:` activas en todas las pantallas y componentes.
-  - ✅ 6. App compila y Metro arranca sin errores (bundle generado exitosamente).
-  - ✅ 7. Lógica intacta: sin cambios en `src/context/`, `src/hooks/` ni `src/services/`.
+  - ✅ 1. API sin cambios: [ClienteSelector.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/components/ClienteSelector.js) acepta `{ clientes, seleccionado, onChange }`; [RegisterPayment.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/screens/RegisterPayment.js) no necesitó cambios.
+  - ✅ 2. Sin `ScrollView` horizontal de chips en [ClienteSelector.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/components/ClienteSelector.js).
+  - ✅ 3. Picker instalado: `@react-native-picker/picker` está en `dependencies` de [package.json](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/package.json).
+  - ✅ 4. Comportamiento iOS: rama `Platform.OS === 'ios'` con `Modal` y botón "Listo".
+  - ✅ 5. Comportamiento Android: rama `Platform.OS === 'android'` renderiza el `Picker` directamente sin `Modal`.
+  - ✅ 6. Consistencia visual: `borderRadius`, `borderWidth`, `backgroundColor` y elevación consistentes con los demás inputs del formulario.
+  - ✅ 7. Sin errores de Metro: compilación y bundling completo tanto para iOS como para Android verificado con éxito.
 
 ## In Progress
 
@@ -49,14 +45,13 @@ change.
 
 ## Open Questions
 
-- Ninguna pendiente sobre la migración a Tailwind.
+- Ninguna pendiente.
 
 ## Architecture Decisions
 
-- **NativeWind v4 + react-native-css-interop:** Para compatibilidad completa con pnpm y Expo SDK 57 / React 19, se explicitó `react-native-css-interop` asegurando la resolución correcta de módulos en Metro sin symlinks rotos.
-- **Dark Mode vía `darkMode: 'media'`:** Sincronizado automáticamente con el esquema de color del sistema operativo (`useColorScheme`) y `Appearance.setColorScheme`.
-- **Compatibilidad con librerías de terceros (react-native-calendars):** `react-native-calendars` no procesa `className`, por lo que su prop `theme` mantiene tokens JavaScript puros desde `theme.js`, mientras que toda la UI circundante fue migrada a clases utilitarias de Tailwind.
+- **Selector Nativo Diferenciado por Plataforma:** En Android se aprovecha el comportamiento nativo de diálogo desplegable que provee el widget `Spinner` a través de `@react-native-picker/picker`, mientras que en iOS se utiliza un `Modal` inferior estilizado con botón "Listo" para garantizar una UX óptima e integrada con el patrón establecido por `DatePickerField.js`.
+- **Preservación Estricta de la API del Componente:** Mantener la firma `{ clientes, seleccionado, onChange }` evita cambios y riesgo de regresión en las pantallas consumidoras ([RegisterPayment.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/screens/RegisterPayment.js) y [EditPayment.js](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/src/screens/EditPayment.js)).
 
 ## Session Notes
 
-- Todos los criterios de [01-tailwind-migration.md](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/context/features/01-tailwind-migration.md) fueron cumplidos y verificados al 100%.
+- Se completó la implementación y validación de [02-select-implementation.md](file:///c:/Users/USER/OneDrive/Documentos/Projects/Android/ControlPrestamos/context/features/02-select-implementation.md).
