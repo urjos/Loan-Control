@@ -3,36 +3,34 @@
 // Selector de cliente en forma de chips/píldoras tocables.
 // ================================================================
 
-import React, { useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
-import { spacing, radius, font, useAppTheme } from "../styles/theme";
+import React from "react";
+import { Text, TouchableOpacity, ScrollView } from "react-native";
 
 export default function ClienteSelector({ clientes, seleccionado, onChange }) {
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
-
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={estilos.contenedor}
+      contentContainerClassName="px-4 gap-2 flex-row"
     >
       {clientes.map((nombre) => {
         const activo = seleccionado === nombre;
         return (
           <TouchableOpacity
             key={nombre}
-            style={[estilos.chip, activo && estilos.chipActivo]}
+            className={`px-4 py-2 rounded-full border-[1.5px] ${
+              activo
+                ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
+            }`}
             onPress={() => onChange(nombre)}
             activeOpacity={0.75}
           >
-            <Text style={[estilos.texto, activo && estilos.textoActivo]}>
+            <Text
+              className={`text-sm font-bold ${
+                activo ? "text-white" : "text-textMuted dark:text-dark-textMuted"
+              }`}
+            >
               {nombre}
             </Text>
           </TouchableOpacity>
@@ -41,32 +39,3 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
     </ScrollView>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    contenedor: {
-      paddingHorizontal: spacing.md,
-      gap: spacing.sm,
-      flexDirection: "row",
-    },
-    chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.full,
-      backgroundColor: colors.divider,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    chipActivo: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    texto: {
-      fontSize: 14,
-      fontWeight: font.bold,
-      color: colors.textMuted,
-    },
-    textoActivo: {
-      color: "#FFFFFF",
-    },
-  });

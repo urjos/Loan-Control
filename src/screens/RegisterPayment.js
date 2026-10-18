@@ -1,19 +1,15 @@
 import { MaterialIcons, Fontisto } from "@expo/vector-icons";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   View,
-  Modal,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
-  Platform,
   StatusBar,
-  ToastAndroid,
   Appearance,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,7 +18,6 @@ import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
 import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
 // Fecha de hoy local en YYYY-MM-DD
 const hoyISO = () => {
@@ -35,9 +30,8 @@ const hoyISO = () => {
 
 export default function RegisterPayment() {
   const { crearPago, guardando } = usePagos();
-
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
 
   const [cliente, setCliente] = useState(CLIENTES[0]);
   const [monto, setMonto] = useState("");
@@ -60,7 +54,7 @@ export default function RegisterPayment() {
       return;
     }
 
-    const resultado = await crearPago({
+    await crearPago({
       fecha,
       cliente,
       monto: montoNum,
@@ -72,29 +66,30 @@ export default function RegisterPayment() {
   };
 
   return (
-    <SafeAreaView style={estilos.contenedor} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
       <StatusBar
-        barStyle={
-          themeColors.text === "#F8FAFC" ? "light-content" : "dark-content"
-        }
-        backgroundColor={themeColors.background}
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#0e0f0f" : "#F8FAFC"}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Encabezado ── */}
-        <View style={estilos.encabezado}>
-          <View style={{ flex: 1 }}>
-            <Text style={estilos.titulo}>Registrar Pago</Text>
-            <Text style={estilos.subtitulo}>Completa los datos del cobro</Text>
+        <View className="flex-row items-center justify-between pt-6 pb-4 px-6">
+          <View className="flex-1">
+            <Text className="text-3xl font-extrabold text-text dark:text-dark-text tracking-tight py-2">
+              Registrar Pago
+            </Text>
+            <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1">
+              Completa los datos del cobro
+            </Text>
           </View>
           <TouchableOpacity
-            style={estilos.botonModo}
+            className="p-1 justify-center"
             onPress={async () => {
               const esquemaActual = Appearance.getColorScheme();
               const nuevoEsquema = esquemaActual === "dark" ? "light" : "dark";
-              // Alterna entre oscuro y claro
               Appearance.setColorScheme(nuevoEsquema);
               try {
                 await AsyncStorage.setItem("temaApp", nuevoEsquema);
@@ -103,12 +98,14 @@ export default function RegisterPayment() {
               }
             }}
           >
-            <Fontisto name="night-clear" size={24} color={themeColors.text} />
+            <Fontisto name="night-clear" size={24} color={isDark ? "#F8FAFC" : "#0F172A"} />
           </TouchableOpacity>
         </View>
 
         {/* ── Sección: Cliente ── */}
-        <Text style={estilos.etiqueta}>¿Quién pagó?</Text>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4">
+          ¿Quién pagó?
+        </Text>
         <ClienteSelector
           clientes={CLIENTES}
           seleccionado={cliente}
@@ -116,40 +113,45 @@ export default function RegisterPayment() {
         />
 
         {/* ── Sección: Monto ── */}
-        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
           Monto cobrado
         </Text>
-        <View style={estilos.inputMontoContenedor}>
-          <Text style={estilos.prefijo}>{MONEDA}</Text>
+        <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm">
+          <Text className="text-xl font-extrabold text-primary dark:text-dark-primary mr-2">
+            {MONEDA}
+          </Text>
           <TextInput
-            style={estilos.inputMonto}
+            className="flex-1 text-[28px] font-extrabold text-text dark:text-dark-text py-4"
             value={monto}
             onChangeText={setMonto}
             keyboardType="decimal-pad"
             placeholder="0.00"
-            placeholderTextColor={themeColors.textLight}
+            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
           />
         </View>
+
         {/* ── Sección: Método de Pago ── */}
-        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
           Método de pago
         </Text>
-        <View style={estilos.filaMetodos}>
+        <View className="flex-row mx-4 gap-2">
           {METODOS.map((item) => (
             <TouchableOpacity
               key={item}
-              style={[
-                estilos.chipMetodo,
-                metodo === item && estilos.chipMetodoActivo,
-              ]}
+              className={`flex-1 py-2.5 rounded-md border-[1.5px] items-center ${
+                metodo === item
+                  ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                  : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
+              }`}
               onPress={() => setMetodo(item)}
               activeOpacity={0.7}
             >
               <Text
-                style={[
-                  estilos.chipTextoMetodo,
-                  metodo === item && estilos.chipTextoMetodoActivo,
-                ]}
+                className={`text-sm font-bold ${
+                  metodo === item
+                    ? "text-white"
+                    : "text-textMuted dark:text-dark-textMuted"
+                }`}
               >
                 {item}
               </Text>
@@ -158,7 +160,7 @@ export default function RegisterPayment() {
         </View>
 
         {/* ── Sección: Fecha ── */}
-        <View style={{ marginTop: spacing.lg }}>
+        <View className="mt-6">
           <DatePickerField
             label="Fecha del pago"
             value={fecha}
@@ -168,7 +170,11 @@ export default function RegisterPayment() {
 
         {/* ── Botón guardar ── */}
         <TouchableOpacity
-          style={[estilos.boton, guardando && estilos.botonDeshabilitado]}
+          className={`rounded-lg py-3.5 mx-4 mt-6 items-center shadow-md ${
+            guardando
+              ? "bg-primaryMuted dark:bg-dark-primaryMuted"
+              : "bg-primary dark:bg-dark-primary"
+          }`}
           onPress={handleGuardar}
           disabled={guardando}
           activeOpacity={0.85}
@@ -176,126 +182,14 @@ export default function RegisterPayment() {
           {guardando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={estilos.textoBoton}>Guardar→</Text>
+            <Text className="text-white text-[17px] font-extrabold tracking-wide">
+              Guardar→
+            </Text>
           )}
         </TouchableOpacity>
 
-        <View style={{ height: spacing.xl }} />
+        <View className="h-8" />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// Convertimos los estilos en una función que acepta la paleta dinámica
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    contenedor: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    encabezado: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.md,
-      paddingHorizontal: spacing.lg,
-    },
-    emoji: {
-      fontSize: 44,
-      marginBottom: spacing.xs,
-    },
-    titulo: {
-      fontSize: 30,
-      fontWeight: font.black,
-      color: colors.text,
-      letterSpacing: -0.5,
-      paddingVertical: spacing.sm,
-    },
-    subtitulo: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: spacing.xs,
-    },
-    botonModo: {
-      padding: spacing.xs,
-      justifyContent: "center",
-    },
-    etiqueta: {
-      fontSize: 14,
-      fontWeight: font.black,
-      color: colors.text,
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    inputMontoContenedor: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      marginHorizontal: spacing.md,
-      paddingHorizontal: spacing.md,
-      ...shadow.sm,
-    },
-    prefijo: {
-      fontSize: 20,
-      fontWeight: font.black,
-      color: colors.primary,
-      marginRight: spacing.sm,
-    },
-    inputMonto: {
-      flex: 1,
-      fontSize: 28,
-      fontWeight: font.black,
-      color: colors.text,
-      paddingVertical: spacing.md,
-    },
-    boton: {
-      backgroundColor: colors.primary,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md + 2,
-      marginHorizontal: spacing.md,
-      marginTop: spacing.lg,
-      alignItems: "center",
-      ...shadow.primary,
-    },
-    botonDeshabilitado: {
-      backgroundColor: colors.primaryMuted,
-      ...shadow.sm,
-    },
-    textoBoton: {
-      color: "#FFF",
-      fontSize: 17,
-      fontWeight: font.black,
-      letterSpacing: 0.3,
-    },
-    // ── Estilos Método Pago ──
-    filaMetodos: {
-      flexDirection: "row",
-      marginHorizontal: spacing.md,
-      gap: spacing.sm,
-    },
-    chipMetodo: {
-      flex: 1,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: radius.md,
-      backgroundColor: colors.surface,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      alignItems: "center",
-    },
-    chipMetodoActivo: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    chipTextoMetodo: {
-      fontSize: 14,
-      fontWeight: font.bold,
-      color: colors.textMuted,
-    },
-    chipTextoMetodoActivo: {
-      color: "#FFF",
-    },
-  });

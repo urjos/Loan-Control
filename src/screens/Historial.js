@@ -1,11 +1,10 @@
 import { MaterialIcons, AntDesign } from "@expo/vector-icons";
-import React, { useEffect, useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   Modal,
@@ -20,7 +19,6 @@ import PaymentCard from "../components/PaymentCard";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
 const toLocalISOString = (date) => {
   const y = date.getFullYear();
@@ -33,9 +31,8 @@ export default function Historial({ navigation }) {
   const { pagos, cargando, sincronizando, fetchPagos, eliminarPago } =
     usePagos();
 
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
   const scheme = useColorScheme();
+  const isDark = scheme === "dark";
 
   const [filtro, setFiltro] = useState("Todos");
   const [orden, setOrden] = useState("desc");
@@ -59,12 +56,9 @@ export default function Historial({ navigation }) {
     setActualizando(false);
   };
 
-  const limpiar = () => {};
-
   const obtenerNombreFecha = (fechaString) => {
     if (!fechaString) return "Fecha desconocida";
 
-    // Convertir 'YYYY-MM-DD' de la base de datos a un objeto Date local
     const [year, month, day] = fechaString.split("-");
     const fechaPago = new Date(year, month - 1, day);
     fechaPago.setHours(0, 0, 0, 0);
@@ -139,8 +133,6 @@ export default function Historial({ navigation }) {
 
   const handleEliminar = async (id) => {
     const result = await eliminarPago(id);
-    // Si la eliminación falla, muestra una alerta.
-    // Si tiene éxito, la lista se actualiza automáticamente y no se muestra nada.
     if (!result.ok) {
       Alert.alert(
         "Error al Eliminar",
@@ -152,16 +144,16 @@ export default function Historial({ navigation }) {
   const toggleOrden = () => setOrden((o) => (o === "desc" ? "asc" : "desc"));
 
   const renderItem = ({ item }) => {
-    // Si el item es un string, es un encabezado de fecha
     if (typeof item === "string") {
       return (
-        <View style={estilos.contenedorFecha}>
-          <Text style={estilos.textoFecha}>{item}</Text>
+        <View className="self-center bg-surface dark:bg-dark-surface px-4 py-1 rounded-sm mb-2 mt-4 border border-border dark:border-dark-border">
+          <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
+            {item}
+          </Text>
         </View>
       );
     }
-    // El hook `usePagos` añade `isPending: true` a los pagos offline.
-    // También podemos verificar el prefijo del ID.
+
     const isPending = item.isPending || String(item.id).startsWith("offline_");
 
     return (
@@ -169,44 +161,47 @@ export default function Historial({ navigation }) {
         pago={item}
         onEditar={handleEditar}
         onEliminar={handleEliminar}
-        isPending={isPending} // Pasamos el estado pendiente a la tarjeta
+        isPending={isPending}
       />
     );
   };
 
   const datosParaFlatList = [];
   datosAgrupados.forEach((grupo) => {
-    datosParaFlatList.push(grupo.titulo); // Añade el string ("Hoy", "Ayer", etc)
-    grupo.data.forEach((pago) => datosParaFlatList.push(pago)); // Añade los objetos pago
+    datosParaFlatList.push(grupo.titulo);
+    grupo.data.forEach((pago) => datosParaFlatList.push(pago));
   });
 
   return (
-    <SafeAreaView style={estilos.contenedor} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
       {/* ── Encabezado ── */}
-      <View style={estilos.encabezado}>
-        <View style={{ flex: 1 }}>
-          <Text style={estilos.titulo}>Historial</Text>
-          <Text style={estilos.subtitulo}>
+      <View className="flex-row items-center justify-between pt-6 pb-4 px-6">
+        <View className="flex-1">
+          <Text className="text-3xl font-extrabold text-text dark:text-dark-text tracking-tight py-2">
+            Historial
+          </Text>
+          <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1">
             {pagos.length}{" "}
             {pagos.length === 1 ? "pago registrado" : "pagos registrados"}
           </Text>
         </View>
         {sincronizando && (
-          <View style={estilos.syncIndicator}>
-            <ActivityIndicator color={themeColors.primary} size="small" />
-            <Text style={estilos.syncText}>Sincronizando...</Text>
+          <View className="flex-row items-center gap-2 px-4">
+            <ActivityIndicator color="#2563EB" size="small" />
+            <Text className="text-xs text-textMuted dark:text-dark-textMuted font-bold">
+              Sincronizando...
+            </Text>
           </View>
         )}
       </View>
 
       {/* ── Tarjeta de totales ── */}
-
-      <View style={estilos.tarjetaTotales}>
-        <View style={estilos.totalItem}>
-          <Text style={estilos.totalLabel}>
+      <View className="bg-primary dark:bg-dark-primary mx-4 mb-4 rounded-lg p-4 flex-row items-center shadow-md">
+        <View className="flex-1">
+          <Text className="text-blue-200 text-xs font-bold mb-1">
             {filtro === "Todos" ? "Total cobrado" : `Total de ${filtro}`}
           </Text>
-          <Text style={estilos.totalMonto}>
+          <Text className="text-white text-[26px] font-extrabold">
             {MONEDA}{" "}
             {totalFiltrado.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
           </Text>
@@ -214,10 +209,10 @@ export default function Historial({ navigation }) {
 
         {filtro !== "Todos" && (
           <>
-            <View style={estilos.separadorVertical} />
-            <View style={estilos.totalItem}>
-              <Text style={estilos.totalLabel}>Total global</Text>
-              <Text style={[estilos.totalMonto, { color: "#93C5FD" }]}>
+            <View className="w-[1px] h-11 bg-white/30 mx-4" />
+            <View className="flex-1">
+              <Text className="text-blue-200 text-xs font-bold mb-1">Total global</Text>
+              <Text className="text-blue-300 text-[26px] font-extrabold">
                 {MONEDA}{" "}
                 {totalGlobal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               </Text>
@@ -227,43 +222,42 @@ export default function Historial({ navigation }) {
       </View>
 
       {/* ── Controles de Búsqueda, Calendario y Orden ── */}
-      <View style={estilos.controlesFila}>
+      <View className="flex-row items-center mx-4 mb-4 gap-2">
         {/* BUSCADOR (Monto / Método) */}
-        <View style={estilos.busquedaContenedor}>
+        <View className="flex-1 flex-row items-center bg-surface dark:bg-dark-surface px-2 h-11 rounded-md border-[1.5px] border-border dark:border-dark-border">
           <TouchableOpacity
             onPress={() => {
               setTipoBusqueda((t) => (t === "monto" ? "metodo" : "monto"));
               setBusqueda("");
               setMetodoSeleccionado("");
             }}
-            style={estilos.btnTipo}
+            className="mr-1 p-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
           >
             <MaterialIcons
               name={tipoBusqueda === "monto" ? "attach-money" : "credit-card"}
               size={20}
-              color={themeColors.primary}
+              color="#2563EB"
             />
           </TouchableOpacity>
 
           {tipoBusqueda === "monto" ? (
             <TextInput
-              style={estilos.busquedaInput}
+              className="flex-1 text-sm text-text dark:text-dark-text h-full justify-center"
               placeholder="Buscar monto..."
               placeholderTextColor="#94A3B8"
               keyboardType="numeric"
               value={busqueda}
-              onChangeText={(t) => setBusqueda(t.replace(/[^0-9.]/g, ""))} // Solo acepta números
+              onChangeText={(t) => setBusqueda(t.replace(/[^0-9.]/g, ""))}
             />
           ) : (
             <TouchableOpacity
-              style={estilos.busquedaInput}
+              className="flex-1 text-sm text-text dark:text-dark-text h-full justify-center"
               onPress={() => setMostrarMetodosBox(true)}
             >
               <Text
-                style={{
-                  color: metodoSeleccionado ? themeColors.text : "#94A3B8",
-                  fontSize: 13,
-                }}
+                className={`text-[13px] ${
+                  metodoSeleccionado ? "text-text dark:text-dark-text" : "text-[#94A3B8]"
+                }`}
               >
                 {metodoSeleccionado || "Elegir método..."}
               </Text>
@@ -285,66 +279,73 @@ export default function Historial({ navigation }) {
 
         {/* CALENDARIO */}
         <TouchableOpacity
-          style={[
-            estilos.botonIcono,
-            fechaBusqueda ? estilos.botonIconoActivo : null,
-          ]}
+          className={`w-11 h-11 justify-center items-center rounded-md border-[1.5px] ${
+            fechaBusqueda
+              ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+              : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
+          }`}
           onPress={() => setMostrarCalendario(true)}
         >
           <MaterialIcons
             name="calendar-month"
             size={22}
-            color={fechaBusqueda ? "#FFF" : themeColors.textMuted}
+            color={fechaBusqueda ? "#FFF" : isDark ? "#94A3B8" : "#64748B"}
           />
         </TouchableOpacity>
 
         {/* ORDEN */}
-        <TouchableOpacity style={estilos.botonIcono} onPress={toggleOrden}>
+        <TouchableOpacity
+          className="w-11 h-11 justify-center items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border"
+          onPress={toggleOrden}
+        >
           <AntDesign
             name={orden === "desc" ? "arrow-down" : "arrow-up"}
             size={20}
-            color={themeColors.textMuted}
+            color={isDark ? "#94A3B8" : "#64748B"}
           />
         </TouchableOpacity>
       </View>
 
       {/* FILTRO ACTIVO FECHA (Debajo del buscador) */}
       {fechaBusqueda !== "" && (
-        <View style={estilos.filtroFechaFila}>
-          <Text style={estilos.filtroFechaTexto}>
+        <View className="flex-row items-center justify-center bg-primaryLight dark:bg-dark-primaryLight py-1 mx-4 mb-2 rounded-sm border border-primaryBorder dark:border-dark-primaryBorder">
+          <Text className="text-[15px] font-bold text-primary dark:text-dark-primary mr-2">
             Fecha: {fechaBusqueda.split("-").reverse().join("/")}
           </Text>
           <TouchableOpacity
             onPress={() => setFechaBusqueda("")}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <MaterialIcons name="close" size={16} color={themeColors.primary} />
+            <MaterialIcons name="close" size={16} color="#2563EB" />
           </TouchableOpacity>
         </View>
       )}
 
       {/* ── Barra de filtro por cliente ── */}
-      <View style={estilos.barraFiltro}>
+      <View className="flex-row items-center mb-2">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={["Todos", ...CLIENTES]}
           keyExtractor={(item) => item}
-          contentContainerStyle={{
-            paddingHorizontal: spacing.md,
-            gap: spacing.sm,
-          }}
+          contentContainerClassName="px-4 gap-2 flex-row"
           renderItem={({ item }) => {
             const activo = filtro === item;
             const count =
               item === "Todos" ? pagos.length : contarPorCliente(item);
             return (
               <TouchableOpacity
-                style={[estilos.chip, activo && estilos.chipActivo]}
+                className={`px-4 py-1.5 rounded-full border-[1.5px] ${
+                  activo
+                    ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                    : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
+                }`}
                 onPress={() => setFiltro(item)}
               >
                 <Text
-                  style={[estilos.chipTexto, activo && estilos.chipTextoActivo]}
+                  className={`text-[13px] font-bold ${
+                    activo ? "text-white" : "text-textMuted dark:text-dark-textMuted"
+                  }`}
                 >
                   {item} ({count})
                 </Text>
@@ -356,8 +357,8 @@ export default function Historial({ navigation }) {
 
       {/* ── Lista de pagos ── */}
       {cargando && !actualizando ? (
-        <View style={estilos.centrado}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
+        <View className="flex-1 justify-center items-center gap-2">
+          <ActivityIndicator size="large" color="#2563EB" />
         </View>
       ) : (
         <FlatList
@@ -365,20 +366,22 @@ export default function Historial({ navigation }) {
           keyExtractor={(item, i) =>
             typeof item === "string" ? `header-${item}` : String(item.id ?? i)
           }
-          contentContainerStyle={estilos.lista}
+          contentContainerClassName="px-4 pb-8"
           refreshControl={
             <RefreshControl
               refreshing={actualizando}
               onRefresh={onRefresh}
-              colors={[themeColors.primary]}
-              tintColor={themeColors.primary}
+              colors={["#2563EB"]}
+              tintColor="#2563EB"
             />
           }
           renderItem={renderItem}
           ListEmptyComponent={
-            <View style={estilos.vacio}>
-              <Text style={estilos.vacioTexto}>Sin pagos registrados</Text>
-              <Text style={estilos.vacioSubtexto}>
+            <View className="items-center pt-12 px-8">
+              <Text className="text-[17px] font-bold text-text dark:text-dark-text text-center">
+                Sin pagos registrados
+              </Text>
+              <Text className="text-[13px] text-textLight dark:text-dark-textLight text-center mt-1">
                 {filtro !== "Todos"
                   ? `${filtro} no tiene pagos aún.`
                   : 'Ve a "Registrar Pago" para agregar el primero.'}
@@ -402,29 +405,29 @@ export default function Historial({ navigation }) {
               setFechaBusqueda(toLocalISOString(selectedDate));
             }
           }}
-          themeVariant={scheme === "dark" ? "dark" : "light"}
+          themeVariant={isDark ? "dark" : "light"}
         />
       )}
 
       {mostrarCalendario && Platform.OS === "ios" && (
         <Modal transparent visible={true} animationType="fade">
           <TouchableOpacity
-            style={estilos.overlay}
+            className="flex-1 bg-black/30"
             activeOpacity={1}
             onPress={() => setMostrarCalendario(false)}
           />
-          <View style={estilos.modalIOS}>
-            <View style={estilos.modalHeaderIOS}>
+          <View className="bg-surface dark:bg-dark-surface pb-8 rounded-t-lg absolute bottom-0 w-full shadow-lg">
+            <View className="flex-row justify-between items-center px-6 py-4 border-b border-border dark:border-dark-border">
               <TouchableOpacity
                 onPress={() => {
                   setFechaBusqueda("");
                   setMostrarCalendario(false);
                 }}
               >
-                <Text style={estilos.textoLimpiarIOS}>Limpiar</Text>
+                <Text className="text-danger dark:text-dark-danger text-base">Limpiar</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMostrarCalendario(false)}>
-                <Text style={estilos.textoListoIOS}>Cerrar</Text>
+                <Text className="text-primary dark:text-dark-primary font-bold text-base">Cerrar</Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
@@ -440,8 +443,8 @@ export default function Historial({ navigation }) {
                   setFechaBusqueda(toLocalISOString(selectedDate));
                 }
               }}
-              accentColor={themeColors.primary}
-              themeVariant={scheme === "dark" ? "dark" : "light"}
+              accentColor="#2563EB"
+              themeVariant={isDark ? "dark" : "light"}
             />
           </View>
         </Modal>
@@ -451,22 +454,24 @@ export default function Historial({ navigation }) {
       {mostrarMetodosBox && (
         <Modal transparent visible={true} animationType="fade">
           <TouchableOpacity
-            style={estilos.overlay}
+            className="flex-1 bg-black/30"
             activeOpacity={1}
             onPress={() => setMostrarMetodosBox(false)}
           />
-          <View style={estilos.boxMetodos}>
-            <Text style={estilos.boxMetodosTitulo}>Método de pago</Text>
+          <View className="absolute top-[40%] self-center w-[70%] bg-surface dark:bg-dark-surface rounded-md pb-1 shadow-md overflow-hidden border border-border dark:border-dark-border">
+            <Text className="text-base font-bold text-white bg-primary dark:bg-dark-primary py-4 text-center">
+              Método de pago
+            </Text>
             {["Efectivo", "Yape", "Otro"].map((m) => (
               <TouchableOpacity
                 key={m}
-                style={estilos.boxMetodoItem}
+                className="py-4 border-t border-border dark:border-dark-border"
                 onPress={() => {
                   setMetodoSeleccionado(m);
                   setMostrarMetodosBox(false);
                 }}
               >
-                <Text style={estilos.boxMetodoTexto}>{m}</Text>
+                <Text className="text-[15px] text-text dark:text-dark-text text-center">{m}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -475,302 +480,3 @@ export default function Historial({ navigation }) {
     </SafeAreaView>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    contenedor: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    encabezado: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.md,
-      paddingHorizontal: spacing.lg,
-    },
-    emoji: {
-      fontSize: 40,
-      marginBottom: spacing.xs,
-    },
-    titulo: {
-      fontSize: 30,
-      fontWeight: font.black,
-      color: colors.text,
-      letterSpacing: -0.5,
-      paddingVertical: spacing.sm,
-    },
-    subtitulo: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: spacing.xs,
-    },
-    syncIndicator: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    syncText: {
-      fontSize: 12,
-      color: colors.textMuted,
-      fontWeight: font.bold,
-    },
-
-    // ── Totales ──
-    tarjetaTotales: {
-      backgroundColor: colors.primary,
-      marginHorizontal: spacing.md,
-      marginBottom: spacing.md,
-      borderRadius: radius.lg,
-      padding: spacing.md,
-      flexDirection: "row",
-      alignItems: "center",
-      ...shadow.primary,
-    },
-    totalItem: {
-      flex: 1,
-    },
-    totalLabel: {
-      color: "#BFDBFE",
-      fontSize: 12,
-      fontWeight: font.bold,
-      marginBottom: spacing.xs,
-    },
-    totalMonto: {
-      color: "#FFFFFF",
-      fontSize: 26,
-      fontWeight: font.black,
-    },
-    separadorVertical: {
-      width: 1,
-      height: 44,
-      backgroundColor: "rgba(255,255,255,0.3)",
-      marginHorizontal: spacing.md,
-    },
-
-    // ── Controles Fijos (Buscador, Calendario, Orden) ──
-    controlesFila: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginHorizontal: spacing.md,
-      marginBottom: spacing.md,
-      gap: spacing.sm,
-    },
-    busquedaContenedor: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      paddingHorizontal: spacing.sm,
-      height: 44,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    btnTipo: {
-      marginRight: spacing.xs,
-      padding: spacing.xs,
-      backgroundColor: colors.primaryLight,
-      borderRadius: radius.sm,
-    },
-    busquedaInput: {
-      flex: 1,
-      fontSize: 14,
-      color: colors.text,
-      height: "100%",
-      justifyContent: "center",
-    },
-    botonIcono: {
-      width: 44,
-      height: 44,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    botonIconoActivo: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    botonOrden: {
-      height: 44,
-      paddingHorizontal: spacing.sm,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.primaryBorder,
-      minWidth: 65,
-    },
-    textoOrden: {
-      fontSize: 15,
-      fontWeight: font.bold,
-      color: colors.primary,
-    },
-    filtroFechaFila: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.primaryLight,
-      paddingVertical: spacing.xs,
-      marginHorizontal: spacing.md,
-      marginBottom: spacing.sm,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: colors.primaryBorder,
-    },
-    filtroFechaTexto: {
-      fontSize: 15,
-      fontWeight: font.bold,
-      color: colors.primary,
-      marginRight: spacing.sm,
-    },
-
-    // ── Filtros ──
-    barraFiltro: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: spacing.sm,
-    },
-    chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm - 1,
-      borderRadius: radius.full,
-      backgroundColor: colors.divider,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    chipActivo: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    chipTexto: {
-      fontSize: 13,
-      fontWeight: font.bold,
-      color: colors.textMuted,
-    },
-    chipTextoActivo: {
-      color: "#FFF",
-    },
-
-    contenedorFecha: {
-      alignSelf: "center",
-      backgroundColor: colors.surface,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: radius.sm,
-      marginBottom: spacing.sm,
-      marginTop: spacing.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    textoFecha: {
-      fontSize: 12,
-      fontWeight: font.bold,
-      color: colors.textMuted,
-    },
-
-    // ── Lista ──
-    lista: {
-      paddingHorizontal: spacing.md,
-      paddingBottom: spacing.xl,
-    },
-    centrado: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      gap: spacing.sm,
-    },
-    textoCargando: {
-      color: colors.textMuted,
-      fontSize: 15,
-    },
-    vacio: {
-      alignItems: "center",
-      paddingTop: spacing.xxl,
-      paddingHorizontal: spacing.xl,
-    },
-    vacioEmoji: {
-      fontSize: 48,
-      marginBottom: spacing.sm,
-    },
-    vacioTexto: {
-      fontSize: 17,
-      fontWeight: font.bold,
-      color: colors.text,
-      textAlign: "center",
-    },
-    vacioSubtexto: {
-      fontSize: 13,
-      color: colors.textLight,
-      textAlign: "center",
-      marginTop: spacing.xs,
-    },
-
-    // ── Modal Calendario iOS ──
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.3)",
-    },
-    modalIOS: {
-      backgroundColor: colors.surface,
-      paddingBottom: spacing.xl,
-      borderTopLeftRadius: radius.lg,
-      borderTopRightRadius: radius.lg,
-      position: "absolute",
-      bottom: 0,
-      width: "100%",
-    },
-    modalHeaderIOS: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    textoLimpiarIOS: { color: colors.danger, fontSize: 16 },
-    textoListoIOS: {
-      color: colors.primary,
-      fontWeight: font.bold,
-      fontSize: 16,
-    },
-
-    // ── Box Métodos ──
-    boxMetodos: {
-      position: "absolute",
-      top: "40%",
-      alignSelf: "center",
-      width: "70%",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      paddingBottom: spacing.xs,
-      ...shadow.md,
-    },
-    boxMetodosTitulo: {
-      fontSize: 16,
-      fontWeight: font.bold,
-      color: "#FFFFFF",
-      backgroundColor: colors.primary,
-      paddingVertical: spacing.md,
-      borderTopLeftRadius: radius.md,
-      borderTopRightRadius: radius.md,
-      textAlign: "center",
-    },
-    boxMetodoItem: {
-      paddingVertical: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    boxMetodoTexto: {
-      fontSize: 15,
-      color: colors.text,
-      textAlign: "center",
-    },
-  });

@@ -1,16 +1,12 @@
-import { MaterialIcons, Entypo } from "@expo/vector-icons";
-import React, { useState, useMemo } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
-  StyleSheet,
   ActivityIndicator,
-  Modal,
 } from "react-native";
 import ModalAlert from "./ModalAlert";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 import { MONEDA } from "../config/constants";
 
 // Formatea 'YYYY-MM-DD' → 'DD/MM/YYYY'
@@ -19,62 +15,56 @@ const formatearFecha = (iso) => {
   const [y, m, d] = String(iso).split("-");
   return `${d}/${m}/${y}`;
 };
+
 export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
   const [eliminando, setEliminando] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const themeColors = useAppTheme();
-  const styles = useMemo(() => crearEstilos(themeColors), [themeColors]);
 
   const estadoPago =
     pago.estado || (parseFloat(pago.monto) === 0 ? "Pendiente" : "Confirmado");
   const confirmarEliminacion = () => setModalVisible(true);
 
   return (
-    <View style={styles.tarjeta}>
+    <View className="bg-surface dark:bg-dark-surface rounded-lg mb-2 overflow-hidden shadow-sm">
       {isPending && (
-        <View style={styles.bannerOffline}>
+        <View className="flex-row items-center gap-1 bg-amber-100 dark:bg-amber-950 px-4 py-1.5 border-b border-amber-200 dark:border-amber-800">
           <MaterialIcons name="wifi-off" size={12} color="#92400e" />
-          <Text style={styles.bannerOfflineTexto}>
+          <Text className="text-[11px] font-bold text-amber-800 dark:text-amber-200">
             Pendiente de sincronizar
           </Text>
         </View>
       )}
-      <View style={styles.filaSuperior}>
-        <View style={styles.avatarContenedor}>
-          <Text style={styles.avatarLetra}>
+      <View className="flex-row items-center px-4 pt-4 pb-2 gap-2">
+        <View className="w-10 h-10 rounded-full bg-primaryLight dark:bg-dark-primaryLight justify-center items-center border-[1.5px] border-primaryBorder dark:border-dark-primaryBorder">
+          <Text className="text-lg font-extrabold text-primary dark:text-dark-primary">
             {pago.cliente?.charAt(0).toUpperCase() || "?"}
           </Text>
         </View>
 
-        <View style={styles.info}>
-          <Text style={styles.nombreCliente}>{pago.cliente}</Text>
+        <View className="flex-1">
+          <Text className="text-[15px] font-extrabold text-text dark:text-dark-text">
+            {pago.cliente}
+          </Text>
 
-          <Text style={styles.fecha}>
+          <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-0.5">
             {formatearFecha(pago.fecha)}{" "}
             {pago.registrado_en?.split(" ")[1] || ""} •{" "}
             {pago.metodo || "Efectivo"}
           </Text>
         </View>
 
-        <View style={{ alignItems: "flex-end" }}>
+        <View className="items-end">
           <Text
-            style={[
-              styles.monto,
-              estadoPago === "Pendiente" && { color: themeColors.warning },
-            ]}
+            className={`text-xl font-extrabold ${
+              estadoPago === "Pendiente"
+                ? "text-warning dark:text-dark-warning"
+                : "text-success dark:text-dark-success"
+            }`}
           >
             {MONEDA} {parseFloat(pago.monto || 0).toFixed(2)}
           </Text>
           {estadoPago === "Pendiente" && (
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "bold",
-                color: themeColors.warning,
-                marginTop: 2,
-              }}
-            >
+            <Text className="text-xs font-bold text-warning dark:text-dark-warning mt-0.5">
               PENDIENTE
             </Text>
           )}
@@ -82,48 +72,44 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
       </View>
 
       {/* ── Divisor ── */}
-      <View style={styles.divisor} />
+      <View className="h-[1px] bg-divider dark:bg-dark-divider mx-4" />
 
       {/* ── Acciones: Editar / Eliminar ── */}
-      <View style={styles.acciones}>
+      <View className="flex-row">
         <TouchableOpacity
-          style={[styles.botonAccion, styles.botonEditar]}
+          className="flex-1 py-2.5 items-center justify-center border-r border-divider dark:border-dark-divider"
           onPress={() => onEditar(pago)}
           activeOpacity={0.75}
         >
-          <Text style={styles.textoEditar}>Editar</Text>
+          <Text className="text-[13px] font-bold text-warning dark:text-dark-warning">
+            Editar
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.botonAccion, styles.botonEliminar]}
+          className="flex-1 py-2.5 items-center justify-center"
           onPress={confirmarEliminacion}
           disabled={eliminando}
           activeOpacity={0.75}
         >
           {eliminando ? (
-            <ActivityIndicator size="small" color={themeColors.danger} />
+            <ActivityIndicator size="small" color="#DC2626" />
           ) : (
-            <Text style={styles.textoEliminar}>Eliminar</Text>
+            <Text className="text-[13px] font-bold text-danger dark:text-dark-danger">
+              Eliminar
+            </Text>
           )}
         </TouchableOpacity>
       </View>
       <ModalAlert
         visible={modalVisible}
-        icono={
-          <MaterialIcons name="warning" size={48} color={themeColors.danger} />
-        }
+        icono={<MaterialIcons name="warning" size={48} color="#DC2626" />}
         titulo="¿Eliminar pago?"
         mensaje="Esta acción no se puede deshacer."
         botones={[
           {
             texto: "Cancelar",
             onPress: () => setModalVisible(false),
-            estilo: {
-              backgroundColor: themeColors.surface,
-              borderWidth: 1,
-              borderColor: themeColors.border,
-            },
-            estiloTexto: { color: themeColors.text },
           },
           {
             texto: "Eliminar",
@@ -133,7 +119,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
               await onEliminar(pago.id);
               setEliminando(false);
             },
-            estilo: { backgroundColor: themeColors.danger },
+            estilo: { backgroundColor: "#DC2626", borderColor: "#DC2626" },
             estiloTexto: { color: "#FFF" },
           },
         ]}
@@ -141,110 +127,3 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
     </View>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    tarjeta: {
-      backgroundColor: colors.surface,
-      borderRadius: radius.lg,
-      marginBottom: spacing.sm,
-      overflow: "hidden",
-      ...shadow.sm,
-    },
-
-    // ── Fila superior ──
-    filaSuperior: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      gap: spacing.sm,
-    },
-    avatarContenedor: {
-      width: 40,
-      height: 40,
-      borderRadius: radius.full,
-      backgroundColor: colors.primaryLight,
-      justifyContent: "center",
-      alignItems: "center",
-      borderWidth: 1.5,
-      borderColor: colors.primaryBorder,
-    },
-    avatarLetra: {
-      fontSize: 18,
-      fontWeight: font.black,
-      color: colors.primary,
-    },
-    info: {
-      flex: 1,
-    },
-    nombreCliente: {
-      fontSize: 15,
-      fontWeight: font.black,
-      color: colors.text,
-    },
-    fecha: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    timestamp: {
-      fontSize: 11,
-      color: colors.textLight,
-      marginTop: 1,
-    },
-    monto: {
-      fontSize: 20,
-      fontWeight: font.black,
-      color: colors.success,
-    },
-
-    // ── Divisor ──
-    divisor: {
-      height: 1,
-      backgroundColor: colors.divider,
-      marginHorizontal: spacing.md,
-    },
-
-    // ── Acciones ──
-    acciones: {
-      flexDirection: "row",
-    },
-    botonAccion: {
-      flex: 1,
-      paddingVertical: spacing.sm + 2,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    botonEditar: {
-      borderRightWidth: 1,
-      borderRightColor: colors.divider,
-    },
-    botonEliminar: {},
-    textoEditar: {
-      fontSize: 13,
-      fontWeight: font.bold,
-      color: colors.warning,
-    },
-    textoEliminar: {
-      fontSize: 13,
-      fontWeight: font.bold,
-      color: colors.danger,
-    },
-    bannerOffline: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: "#FEF3C7",
-      paddingHorizontal: spacing.md,
-      paddingVertical: 5,
-      borderBottomWidth: 1,
-      borderBottomColor: "#FDE68A",
-    },
-    bannerOfflineTexto: {
-      fontSize: 11,
-      fontWeight: font.bold,
-      color: "#92400e",
-    },
-  });

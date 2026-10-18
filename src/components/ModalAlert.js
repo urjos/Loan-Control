@@ -1,33 +1,41 @@
-import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
+import React from "react";
+import { View, Text, TouchableOpacity, Modal } from "react-native";
 
 export default function ModalAlert({
   visible,
   icono,
   titulo,
   mensaje,
-  botones,
+  botones = [],
 }) {
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
-
   return (
     <Modal transparent visible={visible} animationType="fade">
-      <View style={estilos.modalOverlay}>
-        <View style={estilos.modalContenido}>
-          <Text style={estilos.modalIcono}>{icono}</Text>
-          <Text style={estilos.modalTitulo}>{titulo}</Text>
-          <Text style={estilos.modalMensaje}>{mensaje}</Text>
+      <View className="flex-1 bg-black/50 justify-center items-center">
+        <View className="bg-surface dark:bg-dark-surface p-8 rounded-lg items-center w-[80%] border-[1.5px] border-border dark:border-dark-border shadow-md">
+          {typeof icono === "string" ? (
+            <Text className="text-[40px] mb-2">{icono}</Text>
+          ) : (
+            <View className="mb-2">{icono}</View>
+          )}
+          <Text className="text-xl font-bold text-text dark:text-dark-text mb-2 text-center">
+            {titulo}
+          </Text>
+          <Text className="text-base text-textMuted dark:text-dark-textMuted text-center mb-6">
+            {mensaje}
+          </Text>
 
-          <View style={estilos.filaBotones}>
+          <View className="flex-row justify-between w-full gap-2">
             {botones.map((btn, index) => (
               <TouchableOpacity
                 key={index}
-                style={[estilos.botonModal, btn.estilo]}
+                className="flex-1 py-2 rounded-md items-center justify-center border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
+                style={btn.estilo}
                 onPress={btn.onPress}
               >
-                <Text style={[estilos.textoBotonModal, btn.estiloTexto]}>
+                <Text
+                  className="font-bold text-base text-text dark:text-dark-text"
+                  style={btn.estiloTexto}
+                >
                   {btn.texto}
                 </Text>
               </TouchableOpacity>
@@ -38,49 +46,3 @@ export default function ModalAlert({
     </Modal>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    modalContenido: {
-      backgroundColor: colors.surface,
-      padding: spacing.xl,
-      borderRadius: radius.lg,
-      alignItems: "center",
-      width: "80%",
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      ...shadow.md,
-    },
-    modalIcono: { fontSize: 40, marginBottom: spacing.sm },
-    modalTitulo: {
-      fontSize: 20,
-      fontWeight: font.bold,
-      color: colors.text,
-      marginBottom: spacing.sm,
-    },
-    modalMensaje: {
-      fontSize: 16,
-      color: colors.textMuted,
-      textAlign: "center",
-      marginBottom: spacing.lg,
-    },
-    filaBotones: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "100%",
-      gap: spacing.sm,
-    },
-    botonModal: {
-      flex: 1,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-      alignItems: "center",
-    },
-    textoBotonModal: { fontWeight: font.bold, fontSize: 16 },
-  });

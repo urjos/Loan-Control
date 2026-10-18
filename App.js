@@ -1,3 +1,4 @@
+import "./global.css";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import { Platform, Text, useColorScheme, Appearance } from "react-native";

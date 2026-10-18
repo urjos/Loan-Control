@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -11,7 +10,7 @@ import { Calendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAppTheme, font, spacing, radius, shadow } from "../styles/theme";
+import { useAppTheme, font } from "../styles/theme";
 
 // --- Lógica del Calendario ---
 
@@ -81,10 +80,8 @@ const toLocalDateString = (date) => {
 
 export default function DishwashingCalendar() {
   const themeColors = useAppTheme();
-
   const colorScheme = useColorScheme();
-
-  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+  const isDark = colorScheme === "dark";
 
   const MY_TURN_COLOR = themeColors.primary;
   const BROTHER_TURN_COLOR = themeColors.success;
@@ -190,7 +187,7 @@ export default function DishwashingCalendar() {
           alignItems: "center",
         },
         todayText: {
-          color: themeColors.primary,
+          color: MY_TURN_COLOR,
           fontWeight: font.black,
         },
       },
@@ -199,22 +196,25 @@ export default function DishwashingCalendar() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="pb-12"
         showsVerticalScrollIndicator={false}
       >
         {/* Encabezado */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Calendario</Text>
-          <Text style={styles.subtitle}>Organización de tareas del hogar</Text>
+        <View className="px-6 py-6">
+          <Text className="text-3xl font-extrabold text-text dark:text-dark-text">
+            Calendario
+          </Text>
+          <Text className="text-[15px] text-textMuted dark:text-dark-textMuted mt-1">
+            Organización de tareas del hogar
+          </Text>
         </View>
 
         {/* Calendario */}
-        <View style={styles.calendarContainer}>
+        <View className="mx-4 rounded-lg bg-surface dark:bg-dark-surface overflow-hidden h-[370px] shadow-md">
           <Calendar
             key={colorScheme}
-            style={styles.calendar}
             markingType="multi-dot"
             markedDates={markedDates}
             theme={calendarTheme}
@@ -222,24 +222,20 @@ export default function DishwashingCalendar() {
         </View>
 
         {/* Leyenda */}
-        <View style={styles.legendContainer}>
-          <LegendItem color={MY_TURN_COLOR} label={MY_NAME} styles={styles} />
-          <LegendItem
-            color={BROTHER_TURN_COLOR}
-            label={BROTHER_NAME}
-            styles={styles}
-          />
+        <View className="flex-row justify-center items-center mt-6 gap-6">
+          <LegendItem color={MY_TURN_COLOR} label={MY_NAME} />
+          <LegendItem color={BROTHER_TURN_COLOR} label={BROTHER_NAME} />
         </View>
 
         {/* Lista de tareas */}
-        <View style={styles.tasksCard}>
-          <View style={styles.tasksHeader}>
-            <Text style={styles.tasksTitle}>Lista de tareas</Text>
-            <Text style={styles.tasksSubtitle}>
+        <View className="mx-4 mt-6 rounded-lg bg-surface dark:bg-dark-surface py-2 px-4 shadow-md">
+          <View className="pt-2 pb-4">
+            <Text className="text-lg font-extrabold text-text dark:text-dark-text">
+              Lista de tareas
+            </Text>
+            <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1 leading-[18px]">
               Trapear y limpiar cocina según el turno de hoy:{" "}
-              <Text
-                style={[styles.tasksSubtitleStrong, { color: assigneeColor }]}
-              >
+              <Text className="font-bold" style={{ color: assigneeColor }}>
                 {assigneeName}
               </Text>
             </Text>
@@ -250,14 +246,21 @@ export default function DishwashingCalendar() {
             return (
               <TouchableOpacity
                 key={task.id}
-                style={[
-                  styles.taskRow,
-                  index < HOUSEWORK_TASKS.length - 1 && styles.taskRowDivider,
-                ]}
+                className={`flex-row items-center py-4 ${
+                  index < HOUSEWORK_TASKS.length - 1
+                    ? "border-b border-divider dark:border-dark-divider"
+                    : ""
+                }`}
                 activeOpacity={0.7}
                 onPress={() => toggleTask(task.id)}
               >
-                <View style={[styles.checkbox, done && styles.checkboxDone]}>
+                <View
+                  className={`w-6 h-6 rounded-sm border-2 items-center justify-center mr-4 ${
+                    done
+                      ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                      : "border-primaryMuted dark:border-dark-primaryMuted"
+                  }`}
+                >
                   {done && (
                     <MaterialIcons name="check" size={16} color="#FFFFFF" />
                   )}
@@ -266,29 +269,31 @@ export default function DishwashingCalendar() {
                 <MaterialIcons
                   name={task.icon}
                   size={20}
-                  color={done ? themeColors.textLight : themeColors.textMuted}
-                  style={styles.taskIcon}
+                  color={done ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#94A3B8" : "#64748B")}
+                  className="mr-2"
                 />
 
-                <Text style={[styles.taskLabel, done && styles.taskLabelDone]}>
+                <Text
+                  className={`flex-1 text-[15px] font-medium ${
+                    done
+                      ? "text-textLight dark:text-dark-textLight line-through"
+                      : "text-text dark:text-dark-text"
+                  }`}
+                >
                   {task.label}
                 </Text>
 
                 {task.assignByCalendar && (
                   <View
-                    style={[
-                      styles.assigneeBadge,
-                      {
-                        backgroundColor: `${assigneeColor}1A`,
-                        borderColor: assigneeColor,
-                      },
-                    ]}
+                    className="px-2 py-[3px] rounded-full border ml-2"
+                    style={{
+                      backgroundColor: `${assigneeColor}1A`,
+                      borderColor: assigneeColor,
+                    }}
                   >
                     <Text
-                      style={[
-                        styles.assigneeBadgeText,
-                        { color: assigneeColor },
-                      ]}
+                      className="text-xs font-bold"
+                      style={{ color: assigneeColor }}
                     >
                       {assigneeName}
                     </Text>
@@ -304,144 +309,16 @@ export default function DishwashingCalendar() {
 }
 
 // Sub-componente de leyenda extraído para claridad
-function LegendItem({ color, label, styles }) {
+function LegendItem({ color, label }) {
   return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendText}>{label}</Text>
+    <View className="flex-row items-center">
+      <View
+        className="w-3 h-3 rounded-full mr-2"
+        style={{ backgroundColor: color }}
+      />
+      <Text className="text-sm text-text dark:text-dark-text font-bold">
+        {label}
+      </Text>
     </View>
   );
 }
-
-const createStyles = (colors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    scrollContent: {
-      paddingBottom: spacing.xxl,
-    },
-    header: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.lg,
-    },
-    title: {
-      fontSize: 30,
-      fontWeight: font.black,
-      color: colors.text,
-    },
-    subtitle: {
-      fontSize: 15,
-      color: colors.textMuted,
-      marginTop: 4,
-    },
-    calendarContainer: {
-      marginHorizontal: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.surface,
-      overflow: "hidden",
-      height: 370,
-      ...shadow.md,
-    },
-    calendar: {
-      borderRadius: radius.lg,
-    },
-    legendContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: spacing.lg,
-      gap: spacing.lg,
-    },
-    legendItem: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginRight: spacing.sm,
-    },
-    legendText: {
-      fontSize: 14,
-      color: colors.text,
-      fontWeight: font.bold,
-    },
-    tasksCard: {
-      marginHorizontal: spacing.md,
-      marginTop: spacing.lg,
-      borderRadius: radius.lg,
-      backgroundColor: colors.surface,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      ...shadow.md,
-    },
-    tasksHeader: {
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-    },
-    tasksTitle: {
-      fontSize: 18,
-      fontWeight: font.black,
-      color: colors.text,
-    },
-    tasksSubtitle: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: 4,
-      lineHeight: 18,
-    },
-    tasksSubtitleStrong: {
-      fontWeight: font.bold,
-    },
-    taskRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: spacing.md,
-    },
-    taskRowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.divider,
-    },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: radius.sm,
-      borderWidth: 2,
-      borderColor: colors.primaryMuted,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: spacing.md,
-    },
-    checkboxDone: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    taskIcon: {
-      marginRight: spacing.sm,
-    },
-    taskLabel: {
-      flex: 1,
-      fontSize: 15,
-      color: colors.text,
-      fontWeight: font.medium,
-    },
-    taskLabelDone: {
-      color: colors.textLight,
-      textDecorationLine: "line-through",
-    },
-    assigneeBadge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 3,
-      borderRadius: radius.full,
-      borderWidth: 1,
-      marginLeft: spacing.sm,
-    },
-    assigneeBadgeText: {
-      fontSize: 12,
-      fontWeight: font.bold,
-    },
-  });

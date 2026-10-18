@@ -5,19 +5,17 @@
 // iOS:     muestra un picker en un modal inferior.
 // ================================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Modal,
-  StyleSheet,
   Platform,
   SafeAreaView,
   useColorScheme,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
 // Convierte Date → string 'YYYY-MM-DD'
 const toISO = (date) => {
@@ -36,9 +34,6 @@ const formatear = (iso) => {
 
 export default function DatePickerField({ label, value, onChange }) {
   const [visible, setVisible] = useState(false);
-
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
   const scheme = useColorScheme();
 
   // La fecha actual como objeto Date (para el picker)
@@ -56,16 +51,24 @@ export default function DatePickerField({ label, value, onChange }) {
 
   return (
     <View>
-      {label && <Text style={estilos.etiqueta}>{label}</Text>}
+      {label && (
+        <Text className="text-sm font-bold text-text dark:text-dark-text mb-2 px-4">
+          {label}
+        </Text>
+      )}
 
       {/* ── Botón que muestra la fecha y abre el picker ── */}
       <TouchableOpacity
-        style={estilos.campo}
+        className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 py-4 shadow-sm"
         onPress={() => setVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={estilos.texto}>{formatear(value)}</Text>
-        <Text style={estilos.chevron}>›</Text>
+        <Text className="flex-1 text-base font-bold text-text dark:text-dark-text">
+          {formatear(value)}
+        </Text>
+        <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
+          ›
+        </Text>
       </TouchableOpacity>
 
       {/* ── Android: DateTimePicker directo (se muestra como diálogo nativo) ── */}
@@ -89,15 +92,22 @@ export default function DatePickerField({ label, value, onChange }) {
           onRequestClose={cerrarIOS}
         >
           <TouchableOpacity
-            style={estilos.overlay}
+            className="flex-1 bg-black/30"
             activeOpacity={1}
             onPress={cerrarIOS}
           />
-          <SafeAreaView style={estilos.modal}>
-            <View style={estilos.modalHeader}>
-              <Text style={estilos.modalTitulo}>Selecciona una fecha</Text>
-              <TouchableOpacity onPress={cerrarIOS} style={estilos.botonListo}>
-                <Text style={estilos.textoListo}>Listo</Text>
+          <SafeAreaView className="bg-surface dark:bg-dark-surface rounded-t-lg shadow-md">
+            <View className="flex-row justify-between items-center px-4 py-4 border-b border-border dark:border-dark-border">
+              <Text className="text-base font-bold text-text dark:text-dark-text">
+                Selecciona una fecha
+              </Text>
+              <TouchableOpacity
+                onPress={cerrarIOS}
+                className="px-2 py-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
+              >
+                <Text className="text-primary dark:text-dark-primary font-bold text-[15px]">
+                  Listo
+                </Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
@@ -106,8 +116,8 @@ export default function DatePickerField({ label, value, onChange }) {
               display="inline" // Muestra un mini-calendario completo en iOS
               onChange={handleChange}
               locale="es-PE"
-              style={estilos.pickerIOS}
-              accentColor={themeColors.primary}
+              className="self-center"
+              accentColor={scheme === "dark" ? "#2879fa" : "#2563EB"}
               themeVariant={scheme === "dark" ? "dark" : "light"}
             />
           </SafeAreaView>
@@ -116,81 +126,3 @@ export default function DatePickerField({ label, value, onChange }) {
     </View>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    etiqueta: {
-      fontSize: 14,
-      fontWeight: font.bold,
-      color: colors.text,
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    campo: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      marginHorizontal: spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      ...shadow.sm,
-    },
-    icono: {
-      fontSize: 20,
-      marginRight: spacing.sm,
-    },
-    texto: {
-      flex: 1,
-      fontSize: 16,
-      fontWeight: font.bold,
-      color: colors.text,
-    },
-    chevron: {
-      fontSize: 22,
-      color: colors.textLight,
-      fontWeight: font.bold,
-    },
-
-    // ── iOS Modal ──
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.3)",
-    },
-    modal: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: radius.lg,
-      borderTopRightRadius: radius.lg,
-      ...shadow.md,
-    },
-    modalHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    modalTitulo: {
-      fontSize: 16,
-      fontWeight: font.bold,
-      color: colors.text,
-    },
-    botonListo: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      backgroundColor: colors.primaryLight,
-      borderRadius: radius.sm,
-    },
-    textoListo: {
-      color: colors.primary,
-      fontWeight: font.bold,
-      fontSize: 15,
-    },
-    pickerIOS: {
-      alignSelf: "center",
-    },
-  });

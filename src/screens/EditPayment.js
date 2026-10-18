@@ -1,15 +1,14 @@
-import { MaterialIcons, Feather } from "@expo/vector-icons";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Alert,
   ActivityIndicator,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,18 +16,13 @@ import ClienteSelector from "../components/ClienteSelector";
 import DatePickerField from "../components/DatePickerField";
 import { usePagos } from "../context/PaymentsContext";
 import { CLIENTES, MONEDA } from "../config/constants";
-import { spacing, radius, font, shadow, useAppTheme } from "../styles/theme";
 
 export default function EditPayment({ route, navigation }) {
-  // El pago original llega como parámetro de navegación
   const { pago } = route.params;
-
   const { actualizarPago, guardando } = usePagos();
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
 
-  const themeColors = useAppTheme();
-  const estilos = useMemo(() => crearEstilos(themeColors), [themeColors]);
-
-  // Estado local inicializado con los valores actuales del pago
   const [cliente, setCliente] = useState(pago.cliente);
   const [monto, setMonto] = useState(String(pago.monto));
   const [fecha, setFecha] = useState(pago.fecha);
@@ -63,32 +57,45 @@ export default function EditPayment({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView style={estilos.contenedor} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Encabezado ── */}
-        <View style={estilos.encabezado}>
+        <View className="pt-6 pb-4 px-6">
           {/* Botón volver */}
           <TouchableOpacity
-            style={estilos.botonVolver}
+            className="self-start mb-2 py-1"
             onPress={() => navigation.goBack()}
           >
-            <Text style={estilos.textoVolver}>‹ Volver</Text>
+            <Text className="text-base text-primary dark:text-dark-primary font-bold">
+              ‹ Volver
+            </Text>
           </TouchableOpacity>
 
-          <Text style={estilos.titulo}>Editar Pago</Text>
-          <Text style={estilos.subtitulo}>Modifica los datos y guarda</Text>
+          <Text className="text-3xl font-extrabold text-text dark:text-dark-text tracking-tight py-2">
+            Editar Pago
+          </Text>
+          <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1">
+            Modifica los datos y guarda
+          </Text>
         </View>
 
         {/* ── Banner con ID del pago (referencia) ── */}
-        <View style={estilos.idBanner}>
-          <Text style={estilos.idTexto}>ID: {pago.id}</Text>
+        <View className="bg-divider dark:bg-dark-divider mx-4 rounded-sm py-1 px-4 mb-2">
+          <Text
+            className="text-[11px] text-textLight dark:text-dark-textLight"
+            style={{ fontFamily: Platform.OS === "ios" ? "Courier" : "monospace" }}
+          >
+            ID: {pago.id}
+          </Text>
         </View>
 
         {/* ── Cliente ── */}
-        <Text style={estilos.etiqueta}>Cliente</Text>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4">
+          Cliente
+        </Text>
         <ClienteSelector
           clientes={CLIENTES}
           seleccionado={cliente}
@@ -96,39 +103,45 @@ export default function EditPayment({ route, navigation }) {
         />
 
         {/* ── Monto ── */}
-        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>Monto</Text>
-        <View style={estilos.inputMontoContenedor}>
-          <Text style={estilos.prefijo}>{MONEDA}</Text>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
+          Monto
+        </Text>
+        <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm">
+          <Text className="text-xl font-extrabold text-primary dark:text-dark-primary mr-2">
+            {MONEDA}
+          </Text>
           <TextInput
-            style={estilos.inputMonto}
+            className="flex-1 text-[28px] font-extrabold text-text dark:text-dark-text py-4"
             value={monto}
             onChangeText={setMonto}
             keyboardType="decimal-pad"
             placeholder="0.00"
-            placeholderTextColor={themeColors.textLight}
+            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
           />
         </View>
 
         {/* ── Sección: Método de Pago ── */}
-        <Text style={[estilos.etiqueta, { marginTop: spacing.lg }]}>
+        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
           Método de pago
         </Text>
-        <View style={estilos.filaMetodos}>
+        <View className="flex-row mx-4 gap-2">
           {METODOS.map((item) => (
             <TouchableOpacity
               key={item}
-              style={[
-                estilos.chipMetodo,
-                metodo === item && estilos.chipMetodoActivo,
-              ]}
+              className={`flex-1 py-2.5 rounded-md border-[1.5px] items-center ${
+                metodo === item
+                  ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                  : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
+              }`}
               onPress={() => setMetodo(item)}
               activeOpacity={0.7}
             >
               <Text
-                style={[
-                  estilos.chipTextoMetodo,
-                  metodo === item && estilos.chipTextoMetodoActivo,
-                ]}
+                className={`text-sm font-bold ${
+                  metodo === item
+                    ? "text-white"
+                    : "text-textMuted dark:text-dark-textMuted"
+                }`}
               >
                 {item}
               </Text>
@@ -137,7 +150,7 @@ export default function EditPayment({ route, navigation }) {
         </View>
 
         {/* ── Fecha ── */}
-        <View style={{ marginTop: spacing.lg }}>
+        <View className="mt-6">
           <DatePickerField
             label="Fecha del pago"
             value={fecha}
@@ -147,10 +160,11 @@ export default function EditPayment({ route, navigation }) {
 
         {/* ── Botones ── */}
         <TouchableOpacity
-          style={[
-            estilos.botonGuardar,
-            guardando && estilos.botonDeshabilitado,
-          ]}
+          className={`rounded-lg py-3.5 mx-4 mt-8 items-center shadow-md ${
+            guardando
+              ? "bg-primaryMuted dark:bg-dark-primaryMuted"
+              : "bg-primary dark:bg-dark-primary"
+          }`}
           onPress={handleGuardar}
           disabled={guardando}
           activeOpacity={0.85}
@@ -158,163 +172,24 @@ export default function EditPayment({ route, navigation }) {
           {guardando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={estilos.textoBoton}>Guardar →</Text>
+            <Text className="text-white text-[17px] font-extrabold tracking-wide">
+              Guardar →
+            </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={estilos.botonCancelar}
+          className="rounded-lg py-4 mx-4 mt-2 items-center border-[1.5px] border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
           onPress={() => navigation.goBack()}
           activeOpacity={0.75}
         >
-          <Text style={estilos.textoCancelar}>Cancelar</Text>
+          <Text className="text-textMuted dark:text-dark-textMuted text-base font-bold">
+            Cancelar
+          </Text>
         </TouchableOpacity>
 
-        <View style={{ height: spacing.xl }} />
+        <View className="h-8" />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const crearEstilos = (colors) =>
-  StyleSheet.create({
-    contenedor: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    encabezado: {
-      alignItems: "right",
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.md,
-      paddingHorizontal: spacing.lg,
-    },
-    botonVolver: {
-      alignSelf: "flex-start",
-      marginBottom: spacing.sm,
-      paddingVertical: spacing.xs,
-    },
-    textoVolver: {
-      fontSize: 16,
-      color: colors.primary,
-      fontWeight: font.bold,
-    },
-    emoji: {
-      fontSize: 40,
-      marginBottom: spacing.xs,
-    },
-    titulo: {
-      fontSize: 30,
-      fontWeight: font.black,
-      color: colors.text,
-      letterSpacing: -0.5,
-      paddingVertical: spacing.sm,
-    },
-    subtitulo: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: spacing.xs,
-    },
-    idBanner: {
-      backgroundColor: colors.divider,
-      marginHorizontal: spacing.md,
-      borderRadius: radius.sm,
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.md,
-      marginBottom: spacing.sm,
-    },
-    idTexto: {
-      fontSize: 11,
-      color: colors.textLight,
-      fontFamily: Platform?.OS === "ios" ? "Courier" : "monospace",
-    },
-    etiqueta: {
-      fontSize: 14,
-      fontWeight: font.black,
-      color: colors.text,
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    inputMontoContenedor: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      marginHorizontal: spacing.md,
-      paddingHorizontal: spacing.md,
-      ...shadow.sm,
-    },
-    prefijo: {
-      fontSize: 20,
-      fontWeight: font.black,
-      color: colors.primary,
-      marginRight: spacing.sm,
-    },
-    inputMonto: {
-      flex: 1,
-      fontSize: 28,
-      fontWeight: font.black,
-      color: colors.text,
-      paddingVertical: spacing.md,
-    },
-    botonGuardar: {
-      backgroundColor: colors.primary,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md + 2,
-      marginHorizontal: spacing.md,
-      marginTop: spacing.xl,
-      alignItems: "center",
-      ...shadow.primary,
-    },
-    botonDeshabilitado: {
-      backgroundColor: colors.primaryMuted,
-      ...shadow.sm,
-    },
-    textoBoton: {
-      color: "#FFF",
-      fontSize: 17,
-      fontWeight: font.black,
-      letterSpacing: 0.3,
-    },
-    botonCancelar: {
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md,
-      marginHorizontal: spacing.md,
-      marginTop: spacing.sm,
-      alignItems: "center",
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
-    },
-    textoCancelar: {
-      color: colors.textMuted,
-      fontSize: 16,
-      fontWeight: font.bold,
-    },
-    // ── Estilos Método Pago ──
-    filaMetodos: {
-      flexDirection: "row",
-      marginHorizontal: spacing.md,
-      gap: spacing.sm,
-    },
-    chipMetodo: {
-      flex: 1,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: radius.md,
-      backgroundColor: colors.surface,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      alignItems: "center",
-    },
-    chipMetodoActivo: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    chipTextoMetodo: {
-      fontSize: 14,
-      fontWeight: font.bold,
-      color: colors.textMuted,
-    },
-    chipTextoMetodoActivo: { color: "#FFF" },
-  });
