@@ -1,10 +1,6 @@
-// ================================================================
-// 🎨  src/styles/theme.js
-// Tokens de diseño centralizados: colores, tipografía, espaciado.
-// Cambiar aquí afecta toda la app.
-// ================================================================
+import { useColorScheme } from "react-native";
 
-export const colors = {
+export const lightColors = {
   primary: "#2563EB", // Azul principal
   primaryLight: "#EFF6FF", // Fondo azul suave
   primaryBorder: "#BFDBFE",
@@ -23,11 +19,49 @@ export const colors = {
   textMuted: "#64748B", // Texto secundario
   textLight: "#94A3B8", // Texto muy suave
 
+  calendarTextDisabled: "#A0AEC0",
+
   surface: "#FFFFFF", // Fondo de tarjetas
   background: "#F8FAFC", // Fondo de pantallas
-  border: "#E2E8F0", // Bordes
+  border: "#eef2f7", // Bordes
   borderFocus: "#93C5FD", // Borde al enfocar input
   divider: "#F1F5F9",
+};
+
+export const darkColors = {
+  primary: "#2879fa", // Azul ligeramente más brillante para resaltar
+  primaryLight: "#1E3A8A", // Fondo azul muy oscuro
+  primaryBorder: "#1E40AF",
+  primaryMuted: "#2563EB",
+
+  success: "#10B981",
+  successLight: "#064E3B",
+
+  danger: "#EF4444",
+  dangerLight: "#7F1D1D",
+
+  warning: "#F59E0B",
+  warningLight: "#78350F",
+
+  text: "#F8FAFC", // Texto principal blanco/gris claro
+  textMuted: "#94A3B8",
+  textLight: "#475569",
+
+  // Color específico para los días deshabilitados del calendario en tema oscuro
+  calendarTextDisabled: "#475569",
+
+  surface: "#1e2229",
+  background: "#0e0f0f",
+  border: "#2c333d00",
+  borderFocus: "#3a81f3",
+  divider: "#161922",
+};
+
+export const colors = lightColors;
+
+export const useAppTheme = () => {
+  const scheme = useColorScheme();
+  return scheme === "dark" ? darkColors : lightColors;
 };
 
 export const spacing = {

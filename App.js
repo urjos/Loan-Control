@@ -1,47 +1,51 @@
-// ================================================================
-// 🧭  App.js — Punto de entrada y configuración de navegación
-//
-// Estructura de navegación:
-//   RootStack (no visible)
-//   ├── MainTabs (Bottom Tabs)
-//   │   ├── Tab "Registrar"  → RegistrarPagoScreen
-//   │   └── Tab "Historial"  → HistorialScreen
-//   └── Modal "EditarPago"   → EditarPagoScreen
-//
-// Usar un RootStack encima de los Tabs permite abrir EditarPago
-// como una pantalla de pila (con animación de slide) desde
-// cualquier Tab, sin que aparezca en la barra inferior.
-// ================================================================
-
-import React from "react";
-import { Platform, Text } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import "./global.css";
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect } from "react";
+import { Platform, Text, useColorScheme, Appearance } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  NavigationContainer,
+  DefaultTheme,
+  DarkTheme,
+} from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import RegistrarPagoScreen from "./src/screens/RegistrarPagoScreen";
-import HistorialScreen from "./src/screens/HistorialScreen";
-import EditarPagoScreen from "./src/screens/EditarPagoScreen";
+import RegisterPayment from "./src/screens/RegisterPayment";
+import Historial from "./src/screens/Historial";
+import EditPayment from "./src/screens/EditPayment";
+import DishwashingCalendar from "./src/screens/DishwashingCalendar";
 
-import { colors, font } from "./src/styles/theme";
+import { font, useAppTheme } from "./src/styles/theme";
+import { PaymentsProvider } from "./src/context/PaymentsContext";
+
+// 🔔 Hook de Yape — solo activo en Android
+import { useYapeListener } from "./src/hooks/useYapeListener";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// ── Tabs interiores ──────────────────────────────────────────
+// Componente interno que activa el listener DENTRO del PaymentsProvider,
+// porque useYapeListener necesita acceso a crearPago() del contexto.
+function YapeListenerActivator() {
+  useYapeListener();
+  return null; // no renderiza nada, solo activa el efecto
+}
+
 function MainTabs() {
+  const themeColors = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: themeColors.primary,
         tabBarInactiveTintColor: "#94A3B8",
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: colors.border,
-          paddingBottom: Platform.OS === "ios" ? 20 : 8,
-          paddingTop: 8,
-          height: Platform.OS === "ios" ? 80 : 62,
+          backgroundColor: themeColors.surface,
+          borderTopColor: themeColors.border,
+          paddingBottom: Platform.OS === "ios" ? 40 : 8,
+          height: Platform.OS === "android" ? 70 : 62,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -51,47 +55,87 @@ function MainTabs() {
     >
       <Tab.Screen
         name="Registrar"
-        component={RegistrarPagoScreen}
+        component={RegisterPayment}
         options={{
-          tabBarLabel: "Registrar Pago",
-          tabBarIcon: () => <TabIcon label="💸" />,
+          tabBarLabel: "Registrar",
+          tabBarIcon: () => (
+            <MaterialIcons
+              name="add-circle"
+              size={28}
+              color={themeColors.primary}
+            />
+          ),
         }}
       />
       <Tab.Screen
         name="Historial"
-        component={HistorialScreen}
+        component={Historial}
         options={{
           tabBarLabel: "Historial",
-          tabBarIcon: () => <TabIcon label="📋" />,
+          tabBarIcon: () => (
+            <MaterialIcons
+              name="history"
+              size={28}
+              color={themeColors.primary}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="CalendarioPlatos"
+        component={DishwashingCalendar}
+        options={{
+          tabBarLabel: "Calendario",
+          tabBarIcon: () => (
+            <MaterialIcons
+              name="kitchen"
+              size={28}
+              color={themeColors.primary}
+            />
+          ),
         }}
       />
     </Tab.Navigator>
   );
 }
 
-// ── Ícono emoji para los tabs ────────────────────────────────
-function TabIcon({ label }) {
-  return <Text style={{ fontSize: 22 }}>{label}</Text>;
-}
-
-// ── Root Stack: Tabs + pantalla modal de edición ─────────────
 export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Pantalla principal con las dos tabs */}
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+  const scheme = useColorScheme();
 
-        {/* Pantalla de edición: slide desde abajo en iOS, push en Android */}
-        <Stack.Screen
-          name="EditarPago"
-          component={EditarPagoScreen}
-          options={{
-            presentation: "card",
-            animation: "slide_from_right",
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+  useEffect(() => {
+    const cargarTema = async () => {
+      try {
+        const temaGuardado = await AsyncStorage.getItem("temaApp");
+        if (temaGuardado) Appearance.setColorScheme(temaGuardado);
+      } catch (error) {
+        console.log("Error al cargar el tema:", error);
+      }
+    };
+    cargarTema();
+  }, []);
+
+  const navigationTheme =
+    scheme === "dark"
+      ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: "#0F172A" } }
+      : {
+          ...DefaultTheme,
+          colors: { ...DefaultTheme.colors, background: "#F8FAFC" },
+        };
+
+  return (
+    <PaymentsProvider>
+      <YapeListenerActivator />
+
+      <NavigationContainer theme={navigationTheme}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen
+            name="EditarPago"
+            component={EditPayment}
+            options={{ presentation: "card", animation: "slide_from_right" }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaymentsProvider>
   );
 }

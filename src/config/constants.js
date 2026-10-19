@@ -1,14 +1,10 @@
-// ================================================================
-// ⚙️  src/config/constants.js
-// Único lugar donde cambias la URL y los nombres de clientes.
-// ================================================================
-
-// 1. Pega aquí la URL de tu Google Apps Script (de la Parte 1)
 export const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzsOcrnVrWCRzp_-URSlLhwNXp4CBTVsM1HdGuXx8PtWF6oEK83BTIfGBWxFLdlGg2W/exec";
-
-// 2. Nombres reales de los clientes de tu mamá
+  "https://script.google.com/macros/s/AKfycbxNyOFsrJy7FkLvoMqnc9NSVTxs9jZf8T9VLk88-WqYIBkmKdemQqpJSqasLIZ-uhzt/exec";
 export const CLIENTES = ["Vicky", "Vilma", "Julia"];
-
-// 3. Moneda local (solo visual)
 export const MONEDA = "S/";
+
+export const YAPE_CLIENT_MAP = [
+  { yapeNombre: "Victoria", yapeApellidoPrefix: "sal", appNombre: "Vicky" },
+  { yapeNombre: "Vilma", yapeApellidoPrefix: "paz", appNombre: "Vilma" },
+  { yapeNombre: "Julia", yapeApellidoPrefix: "qui", appNombre: "Julia" },
+];
