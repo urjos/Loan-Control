@@ -20,18 +20,8 @@ import { font, useAppTheme } from "./src/styles/theme";
 import { PaymentsProvider } from "./src/context/PaymentsContext";
 import { refreshCalendarWidget } from "./src/widgets/updateWidget";
 
-// 🔔 Hook de Yape — solo activo en Android
-import { useYapeListener } from "./src/hooks/useYapeListener";
-
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-// Componente interno que activa el listener DENTRO del PaymentsProvider,
-// porque useYapeListener necesita acceso a crearPago() del contexto.
-function YapeListenerActivator() {
-  useYapeListener();
-  return null; // no renderiza nada, solo activa el efecto
-}
 
 function MainTabs() {
   const themeColors = useAppTheme();
@@ -137,8 +127,6 @@ export default function App() {
 
   return (
     <PaymentsProvider>
-      <YapeListenerActivator />
-
       <NavigationContainer theme={navigationTheme}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="MainTabs" component={MainTabs} />
