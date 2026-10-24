@@ -146,7 +146,7 @@ export default function Historial({ navigation }) {
   const renderItem = ({ item }) => {
     if (typeof item === "string") {
       return (
-        <View className="self-center bg-surface dark:bg-dark-surface px-4 py-1 rounded-sm mb-2 mt-4 border border-border dark:border-dark-border">
+        <View className="self-center mt-2 mb-2 rounded-sm">
           <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
             {item}
           </Text>
@@ -173,191 +173,202 @@ export default function Historial({ navigation }) {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
+    <SafeAreaView
+      className="flex-1 px-4 bg-background dark:bg-dark-background"
+      edges={["top"]}
+    >
       {/* ── Encabezado ── */}
-      <View className="flex-row items-center justify-between pt-6 pb-4 px-6">
-        <View className="flex-1">
-          <Text className="text-3xl font-extrabold text-text dark:text-dark-text tracking-tight py-2">
+      <View className="flex-row justify-between items-center py-8">
+        <View className="flex-1 gap-1">
+          <Text className="text-4xl font-extrabold text-text dark:text-dark-text">
             Historial
           </Text>
-          <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1">
+          <Text className="text-sm text-textMuted dark:text-dark-textMuted">
             {pagos.length}{" "}
             {pagos.length === 1 ? "pago registrado" : "pagos registrados"}
           </Text>
         </View>
         {sincronizando && (
-          <View className="flex-row items-center gap-2 px-4">
+          <View className="flex-row gap-2 items-center px-4">
             <ActivityIndicator color="#2563EB" size="small" />
-            <Text className="text-xs text-textMuted dark:text-dark-textMuted font-bold">
+            <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
               Sincronizando...
             </Text>
           </View>
         )}
       </View>
 
-      {/* ── Tarjeta de totales ── */}
-      <View className="bg-primary dark:bg-dark-primary mx-4 mb-4 rounded-lg p-4 flex-row items-center shadow-md">
-        <View className="flex-1">
-          <Text className="text-blue-200 text-xs font-bold mb-1">
-            {filtro === "Todos" ? "Total cobrado" : `Total de ${filtro}`}
-          </Text>
-          <Text className="text-white text-[26px] font-extrabold">
-            {MONEDA}{" "}
-            {totalFiltrado.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-          </Text>
+      <View className="gap-4 mb-4">
+        {/* ── Tarjeta de totales ── */}
+        <View className="flex-row items-center p-4 rounded-lg shadow-md bg-primary dark:bg-dark-primary">
+          <View className="flex-1">
+            <Text className="mb-1 text-xs font-bold text-blue-200">
+              {filtro === "Todos" ? "Total cobrado" : `Total de ${filtro}`}
+            </Text>
+            <Text className="text-white text-[26px] font-extrabold">
+              {MONEDA}{" "}
+              {totalFiltrado.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+            </Text>
+          </View>
+
+          {filtro !== "Todos" && (
+            <>
+              <View className="w-[1px] h-11 bg-white/30 mx-4" />
+              <View className="flex-1">
+                <Text className="mb-1 text-xs font-bold text-blue-200">
+                  Total global
+                </Text>
+                <Text className="text-blue-300 text-[26px] font-extrabold">
+                  {MONEDA}{" "}
+                  {totalGlobal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
-        {filtro !== "Todos" && (
-          <>
-            <View className="w-[1px] h-11 bg-white/30 mx-4" />
-            <View className="flex-1">
-              <Text className="text-blue-200 text-xs font-bold mb-1">Total global</Text>
-              <Text className="text-blue-300 text-[26px] font-extrabold">
-                {MONEDA}{" "}
-                {totalGlobal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              </Text>
-            </View>
-          </>
-        )}
-      </View>
-
-      {/* ── Controles de Búsqueda, Calendario y Orden ── */}
-      <View className="flex-row items-center mx-4 mb-4 gap-2">
-        {/* BUSCADOR (Monto / Método) */}
-        <View className="flex-1 flex-row items-center bg-surface dark:bg-dark-surface px-2 h-11 rounded-md border-[1.5px] border-border dark:border-dark-border">
-          <TouchableOpacity
-            onPress={() => {
-              setTipoBusqueda((t) => (t === "monto" ? "metodo" : "monto"));
-              setBusqueda("");
-              setMetodoSeleccionado("");
-            }}
-            className="mr-1 p-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
-          >
-            <MaterialIcons
-              name={tipoBusqueda === "monto" ? "attach-money" : "credit-card"}
-              size={20}
-              color="#2563EB"
-            />
-          </TouchableOpacity>
-
-          {tipoBusqueda === "monto" ? (
-            <TextInput
-              className="flex-1 text-sm text-text dark:text-dark-text h-full justify-center"
-              placeholder="Buscar monto..."
-              placeholderTextColor="#94A3B8"
-              keyboardType="numeric"
-              value={busqueda}
-              onChangeText={(t) => setBusqueda(t.replace(/[^0-9.]/g, ""))}
-            />
-          ) : (
-            <TouchableOpacity
-              className="flex-1 text-sm text-text dark:text-dark-text h-full justify-center"
-              onPress={() => setMostrarMetodosBox(true)}
-            >
-              <Text
-                className={`text-[13px] ${
-                  metodoSeleccionado ? "text-text dark:text-dark-text" : "text-[#94A3B8]"
-                }`}
-              >
-                {metodoSeleccionado || "Elegir método..."}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {(busqueda !== "" || metodoSeleccionado !== "") && (
+        {/* ── Controles de Búsqueda, Calendario y Orden ── */}
+        <View className="flex-row gap-2 items-center">
+          {/* BUSCADOR (Monto / Método) */}
+          <View className="flex-1 flex-row items-center bg-surface dark:bg-dark-surface px-2 h-12 rounded-md border-[1.5px] border-border dark:border-dark-border">
             <TouchableOpacity
               onPress={() => {
+                setTipoBusqueda((t) => (t === "monto" ? "metodo" : "monto"));
                 setBusqueda("");
                 setMetodoSeleccionado("");
               }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              className="p-1 mr-1"
             >
-              <MaterialIcons name="cancel" size={20} color="#94A3B8" />
+              <MaterialIcons
+                name={tipoBusqueda === "monto" ? "attach-money" : "credit-card"}
+                size={20}
+                color="#2563EB"
+              />
             </TouchableOpacity>
-          )}
-        </View>
 
-        {/* CALENDARIO */}
-        <TouchableOpacity
-          className={`w-11 h-11 justify-center items-center rounded-md border-[1.5px] ${
-            fechaBusqueda
-              ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
-              : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
-          }`}
-          onPress={() => setMostrarCalendario(true)}
-        >
-          <MaterialIcons
-            name="calendar-month"
-            size={22}
-            color={fechaBusqueda ? "#FFF" : isDark ? "#94A3B8" : "#64748B"}
-          />
-        </TouchableOpacity>
-
-        {/* ORDEN */}
-        <TouchableOpacity
-          className="w-11 h-11 justify-center items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border"
-          onPress={toggleOrden}
-        >
-          <AntDesign
-            name={orden === "desc" ? "arrow-down" : "arrow-up"}
-            size={20}
-            color={isDark ? "#94A3B8" : "#64748B"}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* FILTRO ACTIVO FECHA (Debajo del buscador) */}
-      {fechaBusqueda !== "" && (
-        <View className="flex-row items-center justify-center bg-primaryLight dark:bg-dark-primaryLight py-1 mx-4 mb-2 rounded-sm border border-primaryBorder dark:border-dark-primaryBorder">
-          <Text className="text-[15px] font-bold text-primary dark:text-dark-primary mr-2">
-            Fecha: {fechaBusqueda.split("-").reverse().join("/")}
-          </Text>
-          <TouchableOpacity
-            onPress={() => setFechaBusqueda("")}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <MaterialIcons name="close" size={16} color="#2563EB" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* ── Barra de filtro por cliente ── */}
-      <View className="flex-row items-center mb-2">
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={["Todos", ...CLIENTES]}
-          keyExtractor={(item) => item}
-          contentContainerClassName="px-4 gap-2 flex-row"
-          renderItem={({ item }) => {
-            const activo = filtro === item;
-            const count =
-              item === "Todos" ? pagos.length : contarPorCliente(item);
-            return (
+            {tipoBusqueda === "monto" ? (
+              <TextInput
+                className="flex-1 justify-center h-full text-md text-text dark:text-dark-text"
+                placeholder="Buscar monto..."
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                value={busqueda}
+                onChangeText={(t) => setBusqueda(t.replace(/[^0-9.]/g, ""))}
+              />
+            ) : (
               <TouchableOpacity
-                className={`px-4 py-1.5 rounded-full border-[1.5px] ${
-                  activo
-                    ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
-                    : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
-                }`}
-                onPress={() => setFiltro(item)}
+                className="flex-1 justify-center h-full text-md text-text dark:text-dark-text"
+                onPress={() => setMostrarMetodosBox(true)}
               >
                 <Text
-                  className={`text-[13px] font-bold ${
-                    activo ? "text-white" : "text-textMuted dark:text-dark-textMuted"
+                  className={`text-md ${
+                    metodoSeleccionado
+                      ? "text-text dark:text-dark-text"
+                      : "text-[#94A3B8]"
                   }`}
                 >
-                  {item} ({count})
+                  {metodoSeleccionado || "Elegir método..."}
                 </Text>
               </TouchableOpacity>
-            );
-          }}
-        />
+            )}
+
+            {(busqueda !== "" || metodoSeleccionado !== "") && (
+              <TouchableOpacity
+                onPress={() => {
+                  setBusqueda("");
+                  setMetodoSeleccionado("");
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <MaterialIcons name="cancel" size={20} color="#94A3B8" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* CALENDARIO */}
+          <TouchableOpacity
+            className={`size-12 justify-center items-center rounded-md border-[1.5px] ${
+              fechaBusqueda
+                ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
+            }`}
+            onPress={() => setMostrarCalendario(true)}
+          >
+            <MaterialIcons
+              name="calendar-month"
+              size={22}
+              color={fechaBusqueda ? "#FFF" : isDark ? "#94A3B8" : "#64748B"}
+            />
+          </TouchableOpacity>
+
+          {/* ORDEN */}
+          <TouchableOpacity
+            className="size-12 justify-center items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border"
+            onPress={toggleOrden}
+          >
+            <AntDesign
+              name={orden === "desc" ? "arrow-down" : "arrow-up"}
+              size={20}
+              color={isDark ? "#94A3B8" : "#64748B"}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* FILTRO ACTIVO FECHA (Debajo del buscador) */}
+        {fechaBusqueda !== "" && (
+          <View className="flex-row justify-center items-center py-2 mb-4 rounded-sm bg-primaryLight dark:bg-dark-primary border-primaryBorder dark:border-dark-primaryBorder">
+            <Text className="mr-2 font-bold text-md text-text dark:text-dark-text">
+              Fecha: {fechaBusqueda.split("-").reverse().join("/")}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setFechaBusqueda("")}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="close" size={16} color="#2563EB" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Barra de filtro por cliente ── */}
+        <View className="flex-row items-center">
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={["Todos", ...CLIENTES]}
+            keyExtractor={(item) => item}
+            contentContainerClassName="gap-2 flex-row"
+            renderItem={({ item }) => {
+              const activo = filtro === item;
+              const count =
+                item === "Todos" ? pagos.length : contarPorCliente(item);
+              return (
+                <TouchableOpacity
+                  className={`px-4 py-1.5 rounded-sm border-[1.5px] ${
+                    activo
+                      ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                      : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
+                  }`}
+                  onPress={() => setFiltro(item)}
+                >
+                  <Text
+                    className={`text-[13px] font-bold ${
+                      activo
+                        ? "text-white"
+                        : "text-textMuted dark:text-dark-textMuted"
+                    }`}
+                  >
+                    {item} ({count})
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </View>
       </View>
 
       {/* ── Lista de pagos ── */}
       {cargando && !actualizando ? (
-        <View className="flex-1 justify-center items-center gap-2">
+        <View className="flex-1 gap-2 justify-center items-center">
           <ActivityIndicator size="large" color="#2563EB" />
         </View>
       ) : (
@@ -366,7 +377,7 @@ export default function Historial({ navigation }) {
           keyExtractor={(item, i) =>
             typeof item === "string" ? `header-${item}` : String(item.id ?? i)
           }
-          contentContainerClassName="px-4 pb-8"
+          contentContainerClassName="pb-8"
           refreshControl={
             <RefreshControl
               refreshing={actualizando}
@@ -377,7 +388,7 @@ export default function Historial({ navigation }) {
           }
           renderItem={renderItem}
           ListEmptyComponent={
-            <View className="items-center pt-12 px-8">
+            <View className="items-center px-8 pt-12">
               <Text className="text-[17px] font-bold text-text dark:text-dark-text text-center">
                 Sin pagos registrados
               </Text>
@@ -416,7 +427,7 @@ export default function Historial({ navigation }) {
             activeOpacity={1}
             onPress={() => setMostrarCalendario(false)}
           />
-          <View className="bg-surface dark:bg-dark-surface pb-8 rounded-t-lg absolute bottom-0 w-full shadow-lg">
+          <View className="absolute bottom-0 pb-8 w-full rounded-t-lg shadow-lg bg-surface dark:bg-dark-surface">
             <View className="flex-row justify-between items-center px-6 py-4 border-b border-border dark:border-dark-border">
               <TouchableOpacity
                 onPress={() => {
@@ -424,10 +435,14 @@ export default function Historial({ navigation }) {
                   setMostrarCalendario(false);
                 }}
               >
-                <Text className="text-danger dark:text-dark-danger text-base">Limpiar</Text>
+                <Text className="text-base text-danger dark:text-dark-danger">
+                  Limpiar
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMostrarCalendario(false)}>
-                <Text className="text-primary dark:text-dark-primary font-bold text-base">Cerrar</Text>
+                <Text className="text-base font-bold text-primary dark:text-dark-primary">
+                  Cerrar
+                </Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
@@ -459,7 +474,7 @@ export default function Historial({ navigation }) {
             onPress={() => setMostrarMetodosBox(false)}
           />
           <View className="absolute top-[40%] self-center w-[70%] bg-surface dark:bg-dark-surface rounded-md pb-1 shadow-md overflow-hidden border border-border dark:border-dark-border">
-            <Text className="text-base font-bold text-white bg-primary dark:bg-dark-primary py-4 text-center">
+            <Text className="py-4 text-base font-bold text-center text-white bg-primary dark:bg-dark-primary">
               Método de pago
             </Text>
             {["Efectivo", "Yape", "Otro"].map((m) => (
@@ -471,7 +486,9 @@ export default function Historial({ navigation }) {
                   setMostrarMetodosBox(false);
                 }}
               >
-                <Text className="text-[15px] text-text dark:text-dark-text text-center">{m}</Text>
+                <Text className="text-[15px] text-text dark:text-dark-text text-center">
+                  {m}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
