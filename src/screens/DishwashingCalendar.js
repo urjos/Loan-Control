@@ -196,112 +196,120 @@ export default function DishwashingCalendar() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
+    <SafeAreaView
+      className="flex-1 px-4 bg-background dark:bg-dark-background"
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerClassName="pb-12"
         showsVerticalScrollIndicator={false}
       >
         {/* Encabezado */}
-        <View className="px-6 py-6">
-          <Text className="text-3xl font-extrabold text-text dark:text-dark-text">
+        <View className="py-8">
+          <Text className="text-4xl font-extrabold text-text dark:text-dark-text">
             Calendario
           </Text>
-          <Text className="text-[15px] text-textMuted dark:text-dark-textMuted mt-1">
+          <Text className="text-sm text-textMuted dark:text-dark-textMuted">
             Organización de tareas del hogar
           </Text>
         </View>
 
-        {/* Calendario */}
-        <View className="mx-4 rounded-lg bg-surface dark:bg-dark-surface overflow-hidden h-[370px] shadow-md">
-          <Calendar
-            key={colorScheme}
-            markingType="multi-dot"
-            markedDates={markedDates}
-            theme={calendarTheme}
-          />
-        </View>
+        <View className="gap-6">
+          {/* Calendario */}
+          <View className="gap-2">
+            <View className=" rounded-lg bg-surface dark:bg-dark-surface overflow-hidden h-[370px] shadow-md">
+              <Calendar
+                key={colorScheme}
+                markingType="multi-dot"
+                markedDates={markedDates}
+                theme={calendarTheme}
+              />
+            </View>
 
-        {/* Leyenda */}
-        <View className="flex-row justify-center items-center mt-6 gap-6">
-          <LegendItem color={MY_TURN_COLOR} label={MY_NAME} />
-          <LegendItem color={BROTHER_TURN_COLOR} label={BROTHER_NAME} />
-        </View>
-
-        {/* Lista de tareas */}
-        <View className="mx-4 mt-6 rounded-lg bg-surface dark:bg-dark-surface py-2 px-4 shadow-md">
-          <View className="pt-2 pb-4">
-            <Text className="text-lg font-extrabold text-text dark:text-dark-text">
-              Lista de tareas
-            </Text>
-            <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1 leading-[18px]">
-              Trapear y limpiar cocina según el turno de hoy:{" "}
-              <Text className="font-bold" style={{ color: assigneeColor }}>
-                {assigneeName}
-              </Text>
-            </Text>
+            {/* Leyenda */}
+            <View className="flex-row gap-6 justify-center items-center">
+              <LegendItem color={MY_TURN_COLOR} label={MY_NAME} />
+              <LegendItem color={BROTHER_TURN_COLOR} label={BROTHER_NAME} />
+            </View>
           </View>
 
-          {HOUSEWORK_TASKS.map((task, index) => {
-            const done = !!completedTasks[task.id];
-            return (
-              <TouchableOpacity
-                key={task.id}
-                className={`flex-row items-center py-4 ${
-                  index < HOUSEWORK_TASKS.length - 1
-                    ? "border-b border-divider dark:border-dark-divider"
-                    : ""
-                }`}
-                activeOpacity={0.7}
-                onPress={() => toggleTask(task.id)}
-              >
-                <View
-                  className={`w-6 h-6 rounded-sm border-2 items-center justify-center mr-4 ${
-                    done
-                      ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
-                      : "border-primaryMuted dark:border-dark-primaryMuted"
-                  }`}
-                >
-                  {done && (
-                    <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                  )}
-                </View>
-
-                <MaterialIcons
-                  name={task.icon}
-                  size={20}
-                  color={done ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#94A3B8" : "#64748B")}
-                  className="mr-2"
-                />
-
-                <Text
-                  className={`flex-1 text-[15px] font-medium ${
-                    done
-                      ? "text-textLight dark:text-dark-textLight line-through"
-                      : "text-text dark:text-dark-text"
-                  }`}
-                >
-                  {task.label}
-                </Text>
-
-                {task.assignByCalendar && (
-                  <View
-                    className="px-2 py-[3px] rounded-full border ml-2"
-                    style={{
-                      backgroundColor: `${assigneeColor}1A`,
-                      borderColor: assigneeColor,
-                    }}
+          {/* Lista de tareas */}
+          <View className="gap-2">
+            <Text className="text-2xl font-extrabold text-text dark:text-dark-text">
+              Lista de tareas
+            </Text>
+            <View className="px-4 py-2 rounded-lg shadow-md bg-surface dark:bg-dark-surface">
+              {HOUSEWORK_TASKS.map((task, index) => {
+                const done = !!completedTasks[task.id];
+                return (
+                  <TouchableOpacity
+                    key={task.id}
+                    className={`flex-row items-center py-4 ${
+                      index < HOUSEWORK_TASKS.length - 1
+                        ? "border-b border-divider dark:border-dark-divider"
+                        : ""
+                    }`}
+                    activeOpacity={0.7}
+                    onPress={() => toggleTask(task.id)}
                   >
-                    <Text
-                      className="text-xs font-bold"
-                      style={{ color: assigneeColor }}
+                    <View
+                      className={`w-6 h-6 rounded-sm border-2 items-center justify-center mr-4 ${
+                        done
+                          ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                          : "border-primaryMuted dark:border-dark-primaryMuted"
+                      }`}
                     >
-                      {assigneeName}
+                      {done && (
+                        <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                      )}
+                    </View>
+
+                    <MaterialIcons
+                      name={task.icon}
+                      size={20}
+                      color={
+                        done
+                          ? isDark
+                            ? "#475569"
+                            : "#94A3B8"
+                          : isDark
+                            ? "#94A3B8"
+                            : "#64748B"
+                      }
+                      className="mr-2"
+                    />
+
+                    <Text
+                      className={`flex-1 text-[15px] font-medium ${
+                        done
+                          ? "line-through text-textLight dark:text-dark-textLight"
+                          : "text-text dark:text-dark-text"
+                      }`}
+                    >
+                      {task.label}
                     </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
+
+                    {task.assignByCalendar && (
+                      <View
+                        className="px-2 py-[3px] rounded-full border ml-2"
+                        style={{
+                          backgroundColor: `${assigneeColor}1A`,
+                          borderColor: assigneeColor,
+                        }}
+                      >
+                        <Text
+                          className="text-xs font-bold"
+                          style={{ color: assigneeColor }}
+                        >
+                          {assigneeName}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -313,10 +321,10 @@ function LegendItem({ color, label }) {
   return (
     <View className="flex-row items-center">
       <View
-        className="w-3 h-3 rounded-full mr-2"
+        className="mr-2 w-3 h-3 rounded-full"
         style={{ backgroundColor: color }}
       />
-      <Text className="text-sm text-text dark:text-dark-text font-bold">
+      <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
         {label}
       </Text>
     </View>
