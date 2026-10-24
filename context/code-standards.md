@@ -2,52 +2,39 @@
 
 ## General
 
-- [Principle — e.g. Keep modules small and single-purpose]
-- [Principle — e.g. Fix root causes, do not layer workarounds]
-- [Principle — e.g. Do not mix unrelated concerns in one
-  component or route]
+- **Modularidad y propósito único:** Mantén los componentes pequeños, enfocados en una sola responsabilidad (ej. selección de fecha, tarjeta de pago, alerta modal).
+- **Resolver la causa raíz:** No parchar errores con timeouts artificiales ni condicionales ad-hoc; identifica el origen del ciclo o error de renderizado.
+- **Separación de responsabilidades:** Las pantallas (`src/screens`) orquestan navegación y llamadas al contexto; los componentes de UI (`src/components`) son puros o controlados; la lógica de sincronización y estado reside en `src/context` y `src/services`.
 
-## TypeScript
+## React & React Native
 
-- [Rule — e.g. Strict mode is required throughout the project]
-- [Rule — e.g. Avoid any — use explicit interfaces or narrowly
-  scoped types]
-- [Rule — e.g. Validate unknown external input at system
-  boundaries before trusting it]
+- **Manejo multiplataforma (iOS & Android):** Siempre contemplar diferencias de comportamiento y UX nativo (por ejemplo: selectores modales en iOS vs diálogos nativos directos en Android mediante `Platform.OS`).
+- **Hooks y dependencias estables:** Usar `useCallback` y `useMemo` para funciones pasadas por props a listas o efectos para prevenir re-renders innecesarios.
+- **Gestión de ciclo de vida:** Limpiar listeners de eventos (`NetInfo`, `AppState`, suscripciones) en las funciones de cleanup de `useEffect`.
+- **Imports limpios:** Agrupar imports en el orden: (1) Core React / React Native, (2) Librerías externas (`@expo/*`, `@react-navigation/*`), (3) Componentes locales, (4) Contextos, hooks y servicios, (5) Estilos y utilidades.
 
-## [Framework — e.g. Next.js]
+## Estilizado con NativeWind & Theme
 
-- [Convention — e.g. Default to server components]
-- [Convention — e.g. Add use client only when browser
-  interactivity requires it]
-- [Convention — e.g. Keep route handlers focused on a
-  single responsibility]
+- **Priorizar utilidades NativeWind (Tailwind):** Usar `className` con los tokens semánticos configurados en `tailwind.config.js`.
+- **Soporte Dark Mode:** Siempre que se asigne un color o fondo, especificar su contraparte para modo oscuro utilizando el prefijo `dark:` (ej. `bg-surface dark:bg-dark-surface text-text dark:text-dark-text`).
+- **Valores no mapeables:** Cuando una librería externa requiera objetos de estilo nativo (como `react-native-calendars`, `react-navigation` o componentes del widget nativo de Android), recurrir a los tokens de `src/styles/theme.js` mediante el hook `useAppTheme()` o las constantes `radius`/`font`.
+- **Cero valores hex harcodeados:** No colocar colores hex directos dispersos en el código; deben pertenecer al tema centralizado o a la configuración de Tailwind.
 
-## Styling
+## Servicios & Datos (API & AsyncStorage)
 
-- [Rule — e.g. Use CSS custom property tokens — no
-  hardcoded hex values]
-- [Rule — e.g. Follow the border radius scale defined
-  in ui-context.md]
+- **Offline-First First Class:** Toda mutación debe prever la posibilidad de fallo de red o ausencia de conectividad. Si no hay red, guardar en cola local (`AsyncStorage`) con estado pendiente.
+- **Control de estados de red:** Usar `NetInfo` para disparar sincronizaciones automáticas al reanudar conexión.
+- **Manejo de errores explícito:** En llamadas a la API remota (`googleSheet.js`), capturar errores y retornar respuestas legibles para la UI sin romper el flujo de la aplicación.
+- **Inmutabilidad en el estado:** Tratar las listas de pagos (`pagos`) de forma inmutable al actualizar o filtrar elementos en `PaymentsContext`.
 
-## API Routes
+## Convenciones de Archivos y Carpetas
 
-- [Rule — e.g. Validate and parse request input before
-  any logic runs]
-- [Rule — e.g. Enforce auth and ownership before any mutation]
-- [Rule — e.g. Return consistent, predictable response shapes]
-
-## Data and Storage
-
-- [Rule — e.g. Metadata belongs in the database]
-- [Rule — e.g. Large generated content belongs in file
-  or blob storage]
-- [Rule — e.g. Do not store large content directly in
-  the database]
-
-## File Organization
-
-- `[folder]/` — [What belongs here]
-- `[folder]/` — [What belongs here]
-- `[folder]/` — [What belongs here]
-- `[folder]/` — [What belongs here]s
+- `src/screens/` — Vistas completas vinculadas al enrutador (PascalCase, ej. `RegisterPayment.js`, `Historial.js`).
+- `src/components/` — Piezas visuales reutilizables (PascalCase, ej. `ClienteSelector.js`, `DatePickerField.js`, `ModalAlert.js`).
+- `src/context/` — Providers y hooks de contexto global (`PaymentsContext.js`, etc.).
+- `src/services/` & `src/api/` — Conectores HTTP, clientes API y lógica de endpoints remotos (`api.js`, `googleSheet.js`).
+- `src/config/` — Valores constantes, catálogos fijos y variables de entorno (`constants.js`).
+- `src/styles/` — Definición central de colores, métricas, fuentes y temas (`theme.js`).
+- `src/widgets/` — Componentes y sincronizadores nativos para Android Widget (`react-native-android-widget`).
+- `src/utils/` — Funciones de formateo de moneda, fechas y cálculos utilitarios.
+- `context/features/` — Especificaciones ejecutables paso a paso para nuevas funcionalidades o refactorizaciones.
