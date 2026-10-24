@@ -1,7 +1,7 @@
 import "./global.css";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
-import { Platform, Text, useColorScheme, Appearance } from "react-native";
+import { Platform, Text, useColorScheme, Appearance, AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   NavigationContainer,
@@ -18,6 +18,7 @@ import DishwashingCalendar from "./src/screens/DishwashingCalendar";
 
 import { font, useAppTheme } from "./src/styles/theme";
 import { PaymentsProvider } from "./src/context/PaymentsContext";
+import { refreshCalendarWidget } from "./src/widgets/updateWidget";
 
 // 🔔 Hook de Yape — solo activo en Android
 import { useYapeListener } from "./src/hooks/useYapeListener";
@@ -101,6 +102,18 @@ function MainTabs() {
 
 export default function App() {
   const scheme = useColorScheme();
+
+  // Refresca el widget del calendario al abrir la app y al volver a primer plano
+  // (el launcher solo lo actualiza automáticamente cada 30 minutos).
+  useEffect(() => {
+    refreshCalendarWidget();
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshCalendarWidget();
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     const cargarTema = async () => {

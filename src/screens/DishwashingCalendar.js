@@ -6,22 +6,62 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { Calendar } from "react-native-calendars";
+import { Calendar, LocaleConfig } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppTheme, font } from "../styles/theme";
+import {
+  MY_NAME,
+  BROTHER_NAME,
+  getCyclePosition,
+  getTodayAssignee,
+  toLocalDateString,
+} from "../utils/turnos";
 
-// --- Lógica del Calendario ---
+LocaleConfig.locales["es"] = {
+  monthNames: [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ],
+  monthNamesShort: [
+    "Ene.",
+    "Feb.",
+    "Mar.",
+    "Abr.",
+    "May.",
+    "Jun.",
+    "Jul.",
+    "Ago.",
+    "Sep.",
+    "Oct.",
+    "Nov.",
+    "Dic.",
+  ],
+  dayNames: [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ],
+  dayNamesShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+  today: "Hoy",
+};
+LocaleConfig.defaultLocale = "es";
 
-const MY_NAME = "Josué";
-const BROTHER_NAME = "David";
-const CYCLE_START_DATE = new Date("2024-01-01T00:00:00");
-
-// --- Lista de tareas del hogar ---
-
-// Las tareas con `assignByCalendar: true` se asignan a quien le toque
-// según el turno del calendario (Josué o David).
 const HOUSEWORK_TASKS = [
   { id: "barrer", label: "Barrer", icon: "cleaning-services" },
   {
@@ -45,38 +85,6 @@ const HOUSEWORK_TASKS = [
 ];
 
 const TASKS_STORAGE_PREFIX = "tareasHogar";
-
-const getDayDifference = (date1, date2) => {
-  const date1UTC = Date.UTC(
-    date1.getFullYear(),
-    date1.getMonth(),
-    date1.getDate(),
-  );
-  const date2UTC = Date.UTC(
-    date2.getFullYear(),
-    date2.getMonth(),
-    date2.getDate(),
-  );
-  return Math.floor((date1UTC - date2UTC) / (1000 * 60 * 60 * 24));
-};
-
-// Devuelve el nombre de la persona a la que le toca el turno hoy,
-// usando la misma rotación de 4 días que pinta el calendario.
-const getTodayAssignee = () => {
-  const today = new Date();
-  const dayDiff = getDayDifference(today, CYCLE_START_DATE);
-  const cyclePosition = ((dayDiff % 4) + 4) % 4;
-  const isMyTurn = cyclePosition === 0 || cyclePosition === 1;
-  return isMyTurn ? MY_NAME : BROTHER_NAME;
-};
-
-// Fecha local en formato YYYY-MM-DD (para la clave de guardado diario).
-const toLocalDateString = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
 
 export default function DishwashingCalendar() {
   const themeColors = useAppTheme();
@@ -136,8 +144,7 @@ export default function DishwashingCalendar() {
       d.setDate(d.getDate() + 1)
     ) {
       const dateString = toLocalDateString(d);
-      const dayDiff = getDayDifference(d, CYCLE_START_DATE);
-      const cyclePosition = ((dayDiff % 4) + 4) % 4;
+      const cyclePosition = getCyclePosition(d);
 
       const dot =
         cyclePosition === 0 || cyclePosition === 1
@@ -223,6 +230,7 @@ export default function DishwashingCalendar() {
                 markingType="multi-dot"
                 markedDates={markedDates}
                 theme={calendarTheme}
+                firstDay={1}
               />
             </View>
 
@@ -316,7 +324,6 @@ export default function DishwashingCalendar() {
   );
 }
 
-// Sub-componente de leyenda extraído para claridad
 function LegendItem({ color, label }) {
   return (
     <View className="flex-row items-center">

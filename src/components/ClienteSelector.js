@@ -34,6 +34,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
           }}
           dropdownIconColor={isDark ? "#2879fa" : "#2563EB"}
           mode="dialog"
+          className="absolute top-[40%] self-center w-[70%] bg-surface dark:bg-dark-surface rounded-md pb-1 shadow-md overflow-hidden border border-border dark:border-dark-border"
         >
           {clientes.map((c) => (
             <Picker.Item key={c} label={c} value={c} />
@@ -59,9 +60,6 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
         />
         <Text className="flex-1 text-base font-bold text-text dark:text-dark-text">
           {seleccionado}
-        </Text>
-        <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
-          ›
         </Text>
       </TouchableOpacity>
 

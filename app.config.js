@@ -88,7 +88,29 @@ export default ({ config }) => {
     web: {
       favicon: "./assets/favicon.png",
     },
-    plugins: ["@react-native-community/datetimepicker"],
+    plugins: [
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-android-widget",
+        {
+          widgets: [
+            {
+              name: "CalendarWidget",
+              label: "Calendario de turnos",
+              description:
+                "Muestra el turno de limpieza de cada día del mes.",
+              minWidth: "250dp",
+              minHeight: "180dp",
+              targetCellWidth: 4,
+              targetCellHeight: 3,
+              resizeMode: "horizontal|vertical",
+              // Mínimo permitido por Android: 30 minutos.
+              updatePeriodMillis: 30 * 60 * 1000,
+            },
+          ],
+        },
+      ],
+    ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
       eas: {
