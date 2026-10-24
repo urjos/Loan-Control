@@ -22,6 +22,12 @@ export default ({ config }) => {
     name: "Control Prestamos",
     slug: "ControlPrestamos",
     version: "3.0.0",
+    updates: {
+      url: "https://u.expo.dev/a5bb2cdb-423f-421b-b813-91635032e9e2",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
+    },
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
