@@ -50,16 +50,16 @@ export default function DatePickerField({ label, value, onChange }) {
   const cerrarIOS = () => setVisible(false);
 
   return (
-    <View>
+    <View className="gap-4">
       {label && (
-        <Text className="text-sm font-bold text-text dark:text-dark-text mb-2 px-4">
+        <Text className="font-bold text-md text-text dark:text-dark-text">
           {label}
         </Text>
       )}
 
       {/* ── Botón que muestra la fecha y abre el picker ── */}
       <TouchableOpacity
-        className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 py-4 shadow-sm"
+        className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border px-4 py-4 shadow-sm"
         onPress={() => setVisible(true)}
         activeOpacity={0.7}
       >
@@ -96,14 +96,14 @@ export default function DatePickerField({ label, value, onChange }) {
             activeOpacity={1}
             onPress={cerrarIOS}
           />
-          <SafeAreaView className="bg-surface dark:bg-dark-surface rounded-t-lg shadow-md">
+          <SafeAreaView className="rounded-t-lg shadow-md bg-surface dark:bg-dark-surface">
             <View className="flex-row justify-between items-center px-4 py-4 border-b border-border dark:border-dark-border">
               <Text className="text-base font-bold text-text dark:text-dark-text">
                 Selecciona una fecha
               </Text>
               <TouchableOpacity
                 onPress={cerrarIOS}
-                className="px-2 py-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
+                className="px-2 py-1 rounded-sm bg-primaryLight dark:bg-dark-primaryLight"
               >
                 <Text className="text-primary dark:text-dark-primary font-bold text-[15px]">
                   Listo

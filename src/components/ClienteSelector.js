@@ -18,7 +18,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
 
   if (Platform.OS === "android") {
     return (
-      <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm h-[58px]">
+      <View className="flex-row items-center px-3 rounded-md shadow-sm bg-surface dark:bg-dark-surface border-border dark:border-dark-border">
         <MaterialIcons
           name="person"
           size={22}
@@ -39,9 +39,6 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
             <Picker.Item key={c} label={c} value={c} />
           ))}
         </Picker>
-        <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
-          ›
-        </Text>
       </View>
     );
   }
@@ -80,14 +77,14 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
             activeOpacity={1}
             onPress={() => setVisible(false)}
           />
-          <SafeAreaView className="bg-surface dark:bg-dark-surface rounded-t-lg shadow-md">
+          <SafeAreaView className="rounded-t-lg shadow-md bg-surface dark:bg-dark-surface">
             <View className="flex-row justify-between items-center px-4 py-4 border-b border-border dark:border-dark-border">
               <Text className="text-base font-bold text-text dark:text-dark-text">
                 Selecciona un cliente
               </Text>
               <TouchableOpacity
                 onPress={() => setVisible(false)}
-                className="px-2 py-1 bg-primaryLight dark:bg-dark-primaryLight rounded-sm"
+                className="px-2 py-1 rounded-sm bg-primaryLight dark:bg-dark-primaryLight"
               >
                 <Text className="text-primary dark:text-dark-primary font-bold text-[15px]">
                   Listo
