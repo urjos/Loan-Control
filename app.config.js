@@ -1,4 +1,4 @@
-const { withAndroidManifest } = require("@expo/config-plugins");
+const { withAndroidManifest } = require("expo/config-plugins");
 
 const withAllowBackupFix = (config) => {
   return withAndroidManifest(config, (config) => {
@@ -55,8 +55,7 @@ export default ({ config }) => {
             {
               name: "CalendarWidget",
               label: "Calendario de turnos",
-              description:
-                "Muestra el turno de limpieza de cada día del mes.",
+              description: "Muestra el turno de limpieza de cada día del mes.",
               minWidth: "250dp",
               minHeight: "180dp",
               targetCellWidth: 4,
