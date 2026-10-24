@@ -12,37 +12,37 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import ClienteSelector from "../components/ClienteSelector";
+import ClientSelector from "../components/ClientSelector";
 import DatePickerField from "../components/DatePickerField";
-import { usePagos } from "../context/PaymentsContext";
-import { CLIENTES, MONEDA } from "../config/constants";
+import { usePayments } from "../context/PaymentsContext";
+import { CLIENTS, CURRENCY } from "../config/constants";
 
 export default function EditPayment({ route, navigation }) {
   const { pago } = route.params;
-  const { actualizarPago, guardando } = usePagos();
+  const { updatePayment, isSaving } = usePayments();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
-  const [cliente, setCliente] = useState(pago.cliente);
-  const [monto, setMonto] = useState(String(pago.monto));
-  const [fecha, setFecha] = useState(pago.fecha);
-  const [metodo, setMetodo] = useState(pago.metodo || "Efectivo");
+  const [client, setClient] = useState(pago.cliente);
+  const [amount, setAmount] = useState(String(pago.monto));
+  const [date, setDate] = useState(pago.fecha);
+  const [method, setMethod] = useState(pago.metodo || "Efectivo");
   const METODOS = ["Efectivo", "Yape", "Otro"];
 
-  const handleGuardar = async () => {
-    const montoNum = monto.trim() === "" ? 0 : parseFloat(monto);
-    const estado = montoNum === 0 ? "Pendiente" : "Confirmado";
+  const handleSave = async () => {
+    const amountNum = amount.trim() === "" ? 0 : parseFloat(amount);
+    const estado = amountNum === 0 ? "Pendiente" : "Confirmado";
 
-    if (isNaN(montoNum) || montoNum < 0) {
+    if (isNaN(amountNum) || amountNum < 0) {
       return;
     }
 
-    const resultado = await actualizarPago({
+    const resultado = await updatePayment({
       id: pago.id,
-      fecha,
-      cliente,
-      monto: montoNum,
-      metodo,
+      fecha: date,
+      cliente: client,
+      monto: amountNum,
+      metodo: method,
       estado,
     });
 
@@ -96,10 +96,10 @@ export default function EditPayment({ route, navigation }) {
         <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4">
           Cliente
         </Text>
-        <ClienteSelector
-          clientes={CLIENTES}
-          seleccionado={cliente}
-          onChange={setCliente}
+        <ClientSelector
+          clients={CLIENTS}
+          selected={client}
+          onChange={setClient}
         />
 
         {/* ── Monto ── */}
@@ -108,12 +108,12 @@ export default function EditPayment({ route, navigation }) {
         </Text>
         <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm">
           <Text className="text-xl font-extrabold text-primary dark:text-dark-primary mr-2">
-            {MONEDA}
+            {CURRENCY}
           </Text>
           <TextInput
             className="flex-1 text-[28px] font-extrabold text-text dark:text-dark-text py-4"
-            value={monto}
-            onChangeText={setMonto}
+            value={amount}
+            onChangeText={setAmount}
             keyboardType="decimal-pad"
             placeholder="0.00"
             placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
@@ -129,16 +129,16 @@ export default function EditPayment({ route, navigation }) {
             <TouchableOpacity
               key={item}
               className={`flex-1 py-2.5 rounded-md border-[1.5px] items-center ${
-                metodo === item
+                method === item
                   ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
                   : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
               }`}
-              onPress={() => setMetodo(item)}
+              onPress={() => setMethod(item)}
               activeOpacity={0.7}
             >
               <Text
                 className={`text-sm font-bold ${
-                  metodo === item
+                  method === item
                     ? "text-white"
                     : "text-textMuted dark:text-dark-textMuted"
                 }`}
@@ -153,23 +153,23 @@ export default function EditPayment({ route, navigation }) {
         <View className="mt-6">
           <DatePickerField
             label="Fecha del pago"
-            value={fecha}
-            onChange={setFecha}
+            value={date}
+            onChange={setDate}
           />
         </View>
 
         {/* ── Botones ── */}
         <TouchableOpacity
           className={`rounded-lg py-3.5 mx-4 mt-8 items-center shadow-md ${
-            guardando
+            isSaving
               ? "bg-primaryMuted dark:bg-dark-primaryMuted"
               : "bg-primary dark:bg-dark-primary"
           }`}
-          onPress={handleGuardar}
-          disabled={guardando}
+          onPress={handleSave}
+          disabled={isSaving}
           activeOpacity={0.85}
         >
-          {guardando ? (
+          {isSaving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <Text className="text-white text-[17px] font-extrabold tracking-wide">

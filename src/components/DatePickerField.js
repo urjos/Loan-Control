@@ -1,10 +1,3 @@
-// ================================================================
-// 📅  src/components/DatePickerField.js
-// Selector de fecha con calendario nativo (Android & iOS).
-// Android: abre un diálogo de sistema.
-// iOS:     muestra un picker en un modal inferior.
-// ================================================================
-
 import React, { useState } from "react";
 import {
   View,
@@ -17,16 +10,16 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-// Convierte Date → string 'YYYY-MM-DD'
-const toISO = (date) => {
+// Converts Date → string 'YYYY-MM-DD'
+const toISODate = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 };
 
-// Formatea 'YYYY-MM-DD' → 'DD/MM/YYYY' para mostrar
-const formatear = (iso) => {
+// Formats 'YYYY-MM-DD' → 'DD/MM/YYYY' for display
+const formatDate = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
@@ -44,10 +37,10 @@ export default function DatePickerField({ label, value, onChange }) {
     if (Platform.OS === "android") setVisible(false);
 
     if (event.type === "dismissed") return; // Usuario canceló
-    if (selectedDate) onChange(toISO(selectedDate));
+    if (selectedDate) onChange(toISODate(selectedDate));
   };
 
-  const cerrarIOS = () => setVisible(false);
+  const closeIOS = () => setVisible(false);
 
   return (
     <View className="gap-4">
@@ -64,7 +57,7 @@ export default function DatePickerField({ label, value, onChange }) {
         activeOpacity={0.7}
       >
         <Text className="flex-1 text-base font-bold text-text dark:text-dark-text">
-          {formatear(value)}
+          {formatDate(value)}
         </Text>
         <Text className="text-[22px] text-textLight dark:text-dark-textLight font-bold">
           ›
@@ -89,12 +82,12 @@ export default function DatePickerField({ label, value, onChange }) {
           transparent
           visible={visible}
           animationType="slide"
-          onRequestClose={cerrarIOS}
+          onRequestClose={closeIOS}
         >
           <TouchableOpacity
             className="flex-1 bg-black/30"
             activeOpacity={1}
-            onPress={cerrarIOS}
+            onPress={closeIOS}
           />
           <SafeAreaView className="rounded-t-lg shadow-md bg-surface dark:bg-dark-surface">
             <View className="flex-row justify-between items-center px-4 py-4 border-b border-border dark:border-dark-border">
@@ -102,7 +95,7 @@ export default function DatePickerField({ label, value, onChange }) {
                 Selecciona una fecha
               </Text>
               <TouchableOpacity
-                onPress={cerrarIOS}
+                onPress={closeIOS}
                 className="px-2 py-1 rounded-sm bg-primaryLight dark:bg-dark-primaryLight"
               >
                 <Text className="text-primary dark:text-dark-primary font-bold text-[15px]">

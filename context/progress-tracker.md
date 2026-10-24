@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- **En Progreso: Refactorización de Código a Inglés (Feature 03)**
+- **Completado: Refactorización de Código a Inglés (Feature 03)**
 
 ## Current Goal
 
-- Refactorizar componentes, constantes, hooks, utilidades y variables de estado a inglés, manteniendo intactos todos los textos visibles de UI en español (`<Text>`, alertas, placeholders).
+- Planificar y ejecutar el siguiente feature (filtros avanzados, exportación o resumen mensual).
 
 ## Completed
 
@@ -18,10 +18,11 @@
 - **Selector de Fechas:** `DatePickerField` unificado para Android e iOS.
 - **Módulo de Calendario de Tareas:** Pantalla de turnos `DishwashingCalendar` con localización en español y semana iniciando en lunes.
 - **Widget Nativo para Android:** `CalendarWidget` sincronizado en primer y segundo plano.
+- **Feature 03 — Refactorización a Inglés:** Constantes (`CLIENTS`, `CURRENCY`), componente `ClientSelector`, props de `ModalAlert` (`icon`, `title`, `message`, `buttons`), funciones internas de `DatePickerField` (`formatDate`, `toISODate`, `closeIOS`), props/estados de `PaymentCard` (`payment`, `onEdit`, `onDelete`, `isDeleting`, `isModalVisible`), hook `usePayments` con `payments`, `isLoading`, `isSaving`, `isSyncing`, `createPayment`, `updatePayment`, `deletePayment`, utilidad `shifts.js` y variables de estado en las tres pantallas — todos los textos visibles de UI permanecen en español.
 
 ## In Progress
 
-- `context/features/03-translation-implemention.md`: Refactorización de identificadores de código a inglés (componentes, constantes, props, hooks, context y utils) preservando el 100% de los textos en español en la interfaz.
+- Sin features activos en este momento.
 
 ## Next Up
 
@@ -32,6 +33,7 @@
 - **Google Apps Script como Backend:** Permite persistencia en nube sin costo de servidores dedicados ni mantenimiento de infraestructura compleja.
 - **Optimistic UI con Cola Offline:** La UI confirma inmediatamente el registro con un ID temporal `offline_<timestamp>`, asegurando respuesta instantánea incluso con baja señal.
 - **Uso Híbrido NativeWind + Tokens JS:** Las clases de Tailwind agilizan la maquetación de pantallas, mientras que `theme.js` suministra los colores exactos a librerías nativas que no leen className (Navigation, Calendars, Widgets).
+- **Código en inglés, UI en español:** Los identificadores de código (constantes, props, hooks, estados) usan inglés para consistencia con el ecosistema JS/React, mientras todos los textos visibles al usuario permanecen en español. El payload que viaja a Google Sheets mantiene claves en español (`monto`, `fecha`, `cliente`, `metodo`, `estado`) para no romper el contrato con el Apps Script remoto.
 
 ## Session Notes
 

@@ -16,21 +16,21 @@ import { api } from "../api/googleSheet";
 const OFFLINE_QUEUE_KEY = "offline_payments_queue";
 const CACHE_KEY = "payments_cache";
 
-export const generarId = () =>
+export const generateId = () =>
   `P_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 const PaymentsContext = createContext(null);
 
 export function PaymentsProvider({ children }) {
-  const [pagos, setPagos] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(false);
-  const [sincronizando, setSincronizando] = useState(false);
-  const isSyncing = useRef(false);
+  const [payments, setPayments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncingRef = useRef(false);
   const lastFetchTime = useRef(0);
 
   useEffect(() => {
-    fetchPagos();
+    fetchPayments();
     const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable) {
         syncOfflinePayments();
@@ -40,21 +40,21 @@ export function PaymentsProvider({ children }) {
   }, []);
 
   const syncOfflinePayments = useCallback(async () => {
-    if (isSyncing.current) {
+    if (syncingRef.current) {
       console.log("Sincronización ya en progreso, omitiendo nueva ejecución.");
       return;
     }
 
-    isSyncing.current = true;
-    setSincronizando(true);
+    syncingRef.current = true;
+    setIsSyncing(true);
 
     try {
       const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
       let queue = queueStr ? JSON.parse(queueStr) : [];
 
       if (queue.length === 0) {
-        isSyncing.current = false;
-        setSincronizando(false);
+        syncingRef.current = false;
+        setIsSyncing(false);
         return;
       }
 
@@ -67,7 +67,7 @@ export function PaymentsProvider({ children }) {
         try {
           const { id: idLocal, isPending, ...pagoData } = pago;
           const idPermanente = idLocal.startsWith("offline_")
-            ? generarId()
+            ? generateId()
             : idLocal;
 
           await api.createPayment({ ...pagoData, id: idPermanente });
@@ -87,25 +87,25 @@ export function PaymentsProvider({ children }) {
         OFFLINE_QUEUE_KEY,
         JSON.stringify(failedPayments),
       );
-      await fetchPagos();
+      await fetchPayments();
     } catch (error) {
       console.error("Error durante el proceso de sincronización:", error);
     } finally {
-      isSyncing.current = false;
-      setSincronizando(false);
+      syncingRef.current = false;
+      setIsSyncing(false);
     }
   }, []);
 
-  const fetchPagos = useCallback(
+  const fetchPayments = useCallback(
     async ({ force = false } = {}) => {
       const ahora = Date.now();
       const esFresco = ahora - lastFetchTime.current < 30_000;
 
-      if (!force && esFresco && pagos.length > 0) {
+      if (!force && esFresco && payments.length > 0) {
         return;
       }
 
-      setCargando(true);
+      setIsLoading(true);
       try {
         const serverData = await api.getPayments();
         const serverPagos = Array.isArray(serverData) ? serverData : [];
@@ -124,7 +124,7 @@ export function PaymentsProvider({ children }) {
               ),
           ),
         ];
-        setPagos(combinedPagos);
+        setPayments(combinedPagos);
 
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(serverPagos));
         lastFetchTime.current = Date.now();
@@ -143,12 +143,12 @@ export function PaymentsProvider({ children }) {
           ...queue,
           ...cache.filter((c) => !queue.some((q) => q.id === c.id)),
         ];
-        setPagos(combinedOffline);
+        setPayments(combinedOffline);
       } finally {
-        setCargando(false);
+        setIsLoading(false);
       }
     },
-    [pagos.length],
+    [payments.length],
   );
 
   const saveOffline = async (pago, reason) => {
@@ -164,19 +164,19 @@ export function PaymentsProvider({ children }) {
       queue.push(pagoTemporal);
       await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 
-      setPagos((prev) => [pagoTemporal, ...prev]);
+      setPayments((prev) => [pagoTemporal, ...prev]);
       console.log(reason, pagoTemporal.id);
       return { ok: true, pago: pagoTemporal };
     } catch (error) {
       return { ok: false, message: "No se pudo guardar localmente." };
     } finally {
-      setGuardando(false);
+      setIsSaving(false);
     }
   };
 
-  const crearPago = useCallback(
+  const createPayment = useCallback(
     async (nuevoPago) => {
-      setGuardando(true);
+      setIsSaving(true);
       try {
         const resultado = await saveOffline(
           nuevoPago,
@@ -187,14 +187,14 @@ export function PaymentsProvider({ children }) {
 
         return resultado;
       } finally {
-        setGuardando(false);
+        setIsSaving(false);
       }
     },
     [syncOfflinePayments],
   );
 
-  const actualizarPago = useCallback(async (pagoActualizado) => {
-    setGuardando(true);
+  const updatePayment = useCallback(async (pagoActualizado) => {
+    setIsSaving(true);
     const { id } = pagoActualizado;
 
     if (String(id).startsWith("offline_")) {
@@ -209,8 +209,8 @@ export function PaymentsProvider({ children }) {
             isPending: true,
           };
           await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-          setPagos((prevPagos) =>
-            prevPagos.map((p) => (p.id === id ? queue[index] : p)),
+          setPayments((prevPayments) =>
+            prevPayments.map((p) => (p.id === id ? queue[index] : p)),
           );
           return { ok: true, pago: queue[index] };
         }
@@ -218,13 +218,13 @@ export function PaymentsProvider({ children }) {
         console.error("Error al actualizar pago offline:", error);
         return { ok: false, message: "No se pudo actualizar el pago local." };
       } finally {
-        setGuardando(false);
+        setIsSaving(false);
       }
     }
 
     const netState = await NetInfo.fetch();
     if (!netState.isConnected || !netState.isInternetReachable) {
-      setGuardando(false);
+      setIsSaving(false);
       return {
         ok: false,
         message:
@@ -235,8 +235,8 @@ export function PaymentsProvider({ children }) {
     try {
       const { id, ...dataToUpdate } = pagoActualizado;
       const pagoRemotoActualizado = await api.updatePayment(id, dataToUpdate);
-      setPagos((prevPagos) =>
-        prevPagos.map((p) => (p.id === id ? pagoRemotoActualizado : p)),
+      setPayments((prevPayments) =>
+        prevPayments.map((p) => (p.id === id ? pagoRemotoActualizado : p)),
       );
       return { ok: true, pago: pagoRemotoActualizado };
     } catch (error) {
@@ -246,23 +246,23 @@ export function PaymentsProvider({ children }) {
         message: "El servidor no pudo actualizar el pago. Intenta más tarde.",
       };
     } finally {
-      setGuardando(false);
+      setIsSaving(false);
     }
   }, []);
 
-  const eliminarPago = useCallback(async (id) => {
+  const deletePayment = useCallback(async (id) => {
     if (String(id).startsWith("offline_")) {
       const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
       let queue = queueStr ? JSON.parse(queueStr) : [];
       const newQueue = queue.filter((p) => p.id !== id);
       await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(newQueue));
-      setPagos((prev) => prev.filter((p) => p.id !== id));
+      setPayments((prev) => prev.filter((p) => p.id !== id));
       return { ok: true };
     }
 
     try {
       await api.deletePayment(id);
-      setPagos((prev) => prev.filter((p) => p.id !== id));
+      setPayments((prev) => prev.filter((p) => p.id !== id));
       return { ok: true };
     } catch (error) {
       return { ok: false, message: "Error al conectar con el servidor." };
@@ -270,14 +270,14 @@ export function PaymentsProvider({ children }) {
   }, []);
 
   const value = {
-    pagos,
-    cargando,
-    guardando,
-    sincronizando,
-    fetchPagos,
-    crearPago,
-    eliminarPago,
-    actualizarPago,
+    payments,
+    isLoading,
+    isSaving,
+    isSyncing,
+    fetchPayments,
+    createPayment,
+    updatePayment,
+    deletePayment,
   };
 
   return (
@@ -287,13 +287,16 @@ export function PaymentsProvider({ children }) {
   );
 }
 
-export function usePagos() {
+export function usePayments() {
   const context = useContext(PaymentsContext);
   if (!context) {
     throw new Error(
-      "usePagos() debe usarse dentro de un <PaymentsProvider>. " +
+      "usePayments() debe usarse dentro de un <PaymentsProvider>. " +
         "Verifica que envolviste tu App.js con <PaymentsProvider>.",
     );
   }
   return context;
 }
+
+// Backward-compatibility alias (remove once all callers are updated)
+export const usePagos = usePayments;

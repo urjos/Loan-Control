@@ -9,7 +9,7 @@ import {
   MY_NAME,
   getAssigneeName,
   isMyTurn,
-} from "../utils/turnos";
+} from "../utils/shifts";
 
 const MONTHS = [
   "Enero",

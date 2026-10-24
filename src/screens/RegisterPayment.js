@@ -14,10 +14,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import ClienteSelector from "../components/ClienteSelector";
+import ClientSelector from "../components/ClientSelector";
 import DatePickerField from "../components/DatePickerField";
-import { usePagos } from "../context/PaymentsContext";
-import { CLIENTES, MONEDA } from "../config/constants";
+import { usePayments } from "../context/PaymentsContext";
+import { CLIENTS, CURRENCY } from "../config/constants";
 
 // Fecha de hoy local en YYYY-MM-DD
 const hoyISO = () => {
@@ -29,40 +29,40 @@ const hoyISO = () => {
 };
 
 export default function RegisterPayment() {
-  const { crearPago, guardando } = usePagos();
+  const { createPayment, isSaving } = usePayments();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
-  const [cliente, setCliente] = useState(CLIENTES[0]);
-  const [monto, setMonto] = useState("");
-  const [fecha, setFecha] = useState(hoyISO());
-  const [metodo, setMetodo] = useState("Efectivo");
+  const [client, setClient] = useState(CLIENTS[0]);
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(hoyISO());
+  const [method, setMethod] = useState("Efectivo");
   const METODOS = ["Efectivo", "Yape", "Otro"];
 
-  const limpiar = () => {
-    setMonto("");
-    setFecha(hoyISO());
-    setCliente(CLIENTES[0]);
-    setMetodo("Efectivo");
+  const handleReset = () => {
+    setAmount("");
+    setDate(hoyISO());
+    setClient(CLIENTS[0]);
+    setMethod("Efectivo");
   };
 
-  const handleGuardar = async () => {
-    const montoNum = monto.trim() === "" ? 0 : parseFloat(monto);
-    const estado = montoNum === 0 ? "Pendiente" : "Confirmado";
+  const handleSave = async () => {
+    const amountNum = amount.trim() === "" ? 0 : parseFloat(amount);
+    const estado = amountNum === 0 ? "Pendiente" : "Confirmado";
 
-    if (isNaN(montoNum) || montoNum < 0) {
+    if (isNaN(amountNum) || amountNum < 0) {
       return;
     }
 
-    await crearPago({
-      fecha,
-      cliente,
-      monto: montoNum,
-      metodo,
+    await createPayment({
+      fecha: date,
+      cliente: client,
+      monto: amountNum,
+      metodo: method,
       estado,
     });
 
-    limpiar();
+    handleReset();
   };
 
   return (
@@ -115,21 +115,21 @@ export default function RegisterPayment() {
             <Text className="font-extrabold text-md text-text dark:text-dark-text">
               ¿Quién pagó?
             </Text>
-            <ClienteSelector
-              clientes={CLIENTES}
-              seleccionado={cliente}
-              onChange={setCliente}
+            <ClientSelector
+              clients={CLIENTS}
+              selected={client}
+              onChange={setClient}
             />
 
             {/* ── Sección: Monto ── */}
             <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border px-3 py-2 shadow-sm">
               <Text className="mr-2 text-xl font-extrabold text-primary dark:text-dark-primary">
-                {MONEDA}
+                {CURRENCY}
               </Text>
               <TextInput
                 className="flex-1 px-3 text-3xl font-bold text-text dark:text-dark-text"
-                value={monto}
-                onChangeText={setMonto}
+                value={amount}
+                onChangeText={setAmount}
                 keyboardType="decimal-pad"
                 placeholder="0.00"
                 placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
@@ -146,16 +146,16 @@ export default function RegisterPayment() {
                 <TouchableOpacity
                   key={item}
                   className={`flex-1 py-3 rounded-md border-[1.5px] items-center ${
-                    metodo === item
+                    method === item
                       ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
                       : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
                   }`}
-                  onPress={() => setMetodo(item)}
+                  onPress={() => setMethod(item)}
                   activeOpacity={0.7}
                 >
                   <Text
                     className={`text-md font-bold ${
-                      metodo === item
+                      method === item
                         ? "text-white"
                         : "text-textMuted dark:text-dark-textMuted"
                     }`}
@@ -170,23 +170,23 @@ export default function RegisterPayment() {
           {/* ── Sección: Fecha ── */}
           <DatePickerField
             label="Fecha del pago"
-            value={fecha}
-            onChange={setFecha}
+            value={date}
+            onChange={setDate}
           />
         </View>
 
         {/* ── Botón guardar ── */}
         <TouchableOpacity
           className={`rounded-xl py-4 mt-10 items-center shadow-md ${
-            guardando
+            isSaving
               ? "bg-primaryMuted dark:bg-dark-primaryMuted"
               : "bg-primary dark:bg-dark-primary"
           }`}
-          onPress={handleGuardar}
-          disabled={guardando}
+          onPress={handleSave}
+          disabled={isSaving}
           activeOpacity={0.85}
         >
-          {guardando ? (
+          {isSaving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <Text className="text-white text-[17px] font-extrabold tracking-wide">
