@@ -22,7 +22,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
         <MaterialIcons
           name="person"
           size={22}
-          color={isDark ? "#94A3B8" : "#64748B"}
+          color={isDark ? "#2879fa" : "#2563EB"}
           style={{ marginRight: 8 }}
         />
         <Picker
@@ -32,7 +32,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
             flex: 1,
             color: isDark ? "#F8FAFC" : "#0F172A",
           }}
-          dropdownIconColor={isDark ? "#94A3B8" : "#64748B"}
+          dropdownIconColor={isDark ? "#2879fa" : "#2563EB"}
           mode="dialog"
         >
           {clientes.map((c) => (
