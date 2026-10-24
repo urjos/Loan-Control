@@ -1,11 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import ModalAlert from "./ModalAlert";
 import { MONEDA } from "../config/constants";
 
@@ -25,37 +20,31 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
   const confirmarEliminacion = () => setModalVisible(true);
 
   return (
-    <View className="bg-surface dark:bg-dark-surface rounded-lg mb-2 overflow-hidden shadow-sm">
+    <View className="overflow-hidden mb-2 rounded-lg shadow-sm bg-surface dark:bg-dark-surface">
       {isPending && (
-        <View className="flex-row items-center gap-1 bg-amber-100 dark:bg-amber-950 px-4 py-1.5 border-b border-amber-200 dark:border-amber-800">
+        <View className="flex-row gap-1 items-center px-4 py-1.5 bg-amber-100 border-amber-200 dark:bg-amber-700 dark:border-amber-800">
           <MaterialIcons name="wifi-off" size={12} color="#92400e" />
-          <Text className="text-[11px] font-bold text-amber-800 dark:text-amber-200">
+          <Text className="text-xs font-bold text-amber-800 dark:text-amber-200">
             Pendiente de sincronizar
           </Text>
         </View>
       )}
-      <View className="flex-row items-center px-4 pt-4 pb-2 gap-2">
-        <View className="w-10 h-10 rounded-full bg-primaryLight dark:bg-dark-primaryLight justify-center items-center border-[1.5px] border-primaryBorder dark:border-dark-primaryBorder">
-          <Text className="text-lg font-extrabold text-primary dark:text-dark-primary">
-            {pago.cliente?.charAt(0).toUpperCase() || "?"}
-          </Text>
-        </View>
-
+      <View className="flex-row gap-2 items-center px-4 pt-4 pb-2">
         <View className="flex-1">
-          <Text className="text-[15px] font-extrabold text-text dark:text-dark-text">
+          <Text className="text-lg font-extrabold text-text dark:text-dark-text">
             {pago.cliente}
           </Text>
 
-          <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-0.5">
+          <Text className="text-sm text-textMuted dark:text-dark-textMuted">
             {formatearFecha(pago.fecha)}{" "}
-            {pago.registrado_en?.split(" ")[1] || ""} •{" "}
+            {pago.registrado_en?.split(" ")[1] || ""}•{" "}
             {pago.metodo || "Efectivo"}
           </Text>
         </View>
 
         <View className="items-end">
           <Text
-            className={`text-xl font-extrabold ${
+            className={`text-2xl font-extrabold ${
               estadoPago === "Pendiente"
                 ? "text-warning dark:text-dark-warning"
                 : "text-success dark:text-dark-success"
@@ -64,7 +53,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
             {MONEDA} {parseFloat(pago.monto || 0).toFixed(2)}
           </Text>
           {estadoPago === "Pendiente" && (
-            <Text className="text-xs font-bold text-warning dark:text-dark-warning mt-0.5">
+            <Text className="mt-0.5 text-xs font-bold text-warning dark:text-dark-warning">
               PENDIENTE
             </Text>
           )}
@@ -77,7 +66,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
       {/* ── Acciones: Editar / Eliminar ── */}
       <View className="flex-row">
         <TouchableOpacity
-          className="flex-1 py-2.5 items-center justify-center border-r border-divider dark:border-dark-divider"
+          className="flex-1 justify-center items-center py-2.5 border-r border-divider dark:border-dark-divider"
           onPress={() => onEditar(pago)}
           activeOpacity={0.75}
         >
@@ -87,7 +76,7 @@ export default function PaymentCard({ pago, onEditar, onEliminar, isPending }) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="flex-1 py-2.5 items-center justify-center"
+          className="flex-1 justify-center items-center py-2.5"
           onPress={confirmarEliminacion}
           disabled={eliminando}
           activeOpacity={0.75}

@@ -1,47 +1,5 @@
 const { withAndroidManifest } = require("@expo/config-plugins");
 
-const NOTIFICATION_SERVICE_CLASS =
-  "com.lesimoes.androidnotificationlistener.RNAndroidNotificationListener";
-
-const withYapeNotificationListener = (config) => {
-  return withAndroidManifest(config, (config) => {
-    const manifest = config.modResults.manifest;
-    const application = manifest.application[0];
-
-    if (!application.service) application.service = [];
-
-    const yaExiste = application.service.some(
-      (s) => s.$["android:name"] === NOTIFICATION_SERVICE_CLASS,
-    );
-
-    if (!yaExiste) {
-      application.service.push({
-        $: {
-          "android:name": NOTIFICATION_SERVICE_CLASS,
-          "android:label": "@string/app_name",
-          "android:permission":
-            "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
-          "android:exported": "true",
-        },
-        "intent-filter": [
-          {
-            action: [
-              {
-                $: {
-                  "android:name":
-                    "android.service.notification.NotificationListenerService",
-                },
-              },
-            ],
-          },
-        ],
-      });
-    }
-
-    return config;
-  });
-};
-
 const withAllowBackupFix = (config) => {
   return withAndroidManifest(config, (config) => {
     const manifest = config.modResults.manifest;
@@ -88,7 +46,29 @@ export default ({ config }) => {
     web: {
       favicon: "./assets/favicon.png",
     },
-    plugins: ["@react-native-community/datetimepicker"],
+    plugins: [
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-android-widget",
+        {
+          widgets: [
+            {
+              name: "CalendarWidget",
+              label: "Calendario de turnos",
+              description:
+                "Muestra el turno de limpieza de cada día del mes.",
+              minWidth: "250dp",
+              minHeight: "180dp",
+              targetCellWidth: 4,
+              targetCellHeight: 3,
+              resizeMode: "horizontal|vertical",
+              // Mínimo permitido por Android: 30 minutos.
+              updatePeriodMillis: 30 * 60 * 1000,
+            },
+          ],
+        },
+      ],
+    ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL,
       eas: {
@@ -97,5 +77,5 @@ export default ({ config }) => {
     },
   };
 
-  return withAllowBackupFix(withYapeNotificationListener(appConfig));
+  return withAllowBackupFix(appConfig);
 };

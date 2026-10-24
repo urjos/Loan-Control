@@ -66,7 +66,10 @@ export default function RegisterPayment() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-dark-background" edges={["top"]}>
+    <SafeAreaView
+      className="flex-1 px-4 bg-background dark:bg-dark-background"
+      edges={["top"]}
+    >
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={isDark ? "#0e0f0f" : "#F8FAFC"}
@@ -76,17 +79,17 @@ export default function RegisterPayment() {
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Encabezado ── */}
-        <View className="flex-row items-center justify-between pt-6 pb-4 px-6">
-          <View className="flex-1">
-            <Text className="text-3xl font-extrabold text-text dark:text-dark-text tracking-tight py-2">
-              Registrar Pago
+        <View className="flex-row justify-between items-center py-8">
+          <View className="flex-1 gap-1">
+            <Text className="text-4xl font-extrabold tracking-tight text-text dark:text-dark-text">
+              Registrar pago
             </Text>
-            <Text className="text-[13px] text-textMuted dark:text-dark-textMuted mt-1">
+            <Text className="text-sm text-textMuted dark:text-dark-textMuted">
               Completa los datos del cobro
             </Text>
           </View>
           <TouchableOpacity
-            className="p-1 justify-center"
+            className="justify-center p-1"
             onPress={async () => {
               const esquemaActual = Appearance.getColorScheme();
               const nuevoEsquema = esquemaActual === "dark" ? "light" : "dark";
@@ -98,69 +101,73 @@ export default function RegisterPayment() {
               }
             }}
           >
-            <Fontisto name="night-clear" size={24} color={isDark ? "#F8FAFC" : "#0F172A"} />
+            <Fontisto
+              name="night-clear"
+              size={24}
+              color={isDark ? "#F8FAFC" : "#0F172A"}
+            />
           </TouchableOpacity>
         </View>
 
-        {/* ── Sección: Cliente ── */}
-        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4">
-          ¿Quién pagó?
-        </Text>
-        <ClienteSelector
-          clientes={CLIENTES}
-          seleccionado={cliente}
-          onChange={setCliente}
-        />
+        <View className="gap-8">
+          {/* ── Sección: Cliente ── */}
+          <View className="gap-4">
+            <Text className="font-extrabold text-md text-text dark:text-dark-text">
+              ¿Quién pagó?
+            </Text>
+            <ClienteSelector
+              clientes={CLIENTES}
+              seleccionado={cliente}
+              onChange={setCliente}
+            />
 
-        {/* ── Sección: Monto ── */}
-        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
-          Monto cobrado
-        </Text>
-        <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border mx-4 px-4 shadow-sm">
-          <Text className="text-xl font-extrabold text-primary dark:text-dark-primary mr-2">
-            {MONEDA}
-          </Text>
-          <TextInput
-            className="flex-1 text-[28px] font-extrabold text-text dark:text-dark-text py-4"
-            value={monto}
-            onChangeText={setMonto}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
-          />
-        </View>
-
-        {/* ── Sección: Método de Pago ── */}
-        <Text className="text-sm font-extrabold text-text dark:text-dark-text mb-2 px-4 mt-6">
-          Método de pago
-        </Text>
-        <View className="flex-row mx-4 gap-2">
-          {METODOS.map((item) => (
-            <TouchableOpacity
-              key={item}
-              className={`flex-1 py-2.5 rounded-md border-[1.5px] items-center ${
-                metodo === item
-                  ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
-                  : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
-              }`}
-              onPress={() => setMetodo(item)}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={`text-sm font-bold ${
-                  metodo === item
-                    ? "text-white"
-                    : "text-textMuted dark:text-dark-textMuted"
-                }`}
-              >
-                {item}
+            {/* ── Sección: Monto ── */}
+            <View className="flex-row items-center bg-surface dark:bg-dark-surface rounded-md border-[1.5px] border-border dark:border-dark-border px-3 py-2 shadow-sm">
+              <Text className="mr-2 text-xl font-extrabold text-primary dark:text-dark-primary">
+                {MONEDA}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <TextInput
+                className="flex-1 px-3 text-3xl font-bold text-text dark:text-dark-text"
+                value={monto}
+                onChangeText={setMonto}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
+              />
+            </View>
+          </View>
+          <View className="gap-4">
+            {/* ── Sección: Método de Pago ── */}
+            <Text className="font-extrabold text-md text-text dark:text-dark-text">
+              Método de pago
+            </Text>
+            <View className="flex-row gap-2">
+              {METODOS.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  className={`flex-1 py-3 rounded-md border-[1.5px] items-center ${
+                    metodo === item
+                      ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
+                      : "bg-surface dark:bg-dark-surface border-border dark:border-dark-border"
+                  }`}
+                  onPress={() => setMetodo(item)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={`text-md font-bold ${
+                      metodo === item
+                        ? "text-white"
+                        : "text-textMuted dark:text-dark-textMuted"
+                    }`}
+                  >
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
-        {/* ── Sección: Fecha ── */}
-        <View className="mt-6">
+          {/* ── Sección: Fecha ── */}
           <DatePickerField
             label="Fecha del pago"
             value={fecha}
@@ -170,7 +177,7 @@ export default function RegisterPayment() {
 
         {/* ── Botón guardar ── */}
         <TouchableOpacity
-          className={`rounded-lg py-3.5 mx-4 mt-6 items-center shadow-md ${
+          className={`rounded-xl py-4 mt-10 items-center shadow-md ${
             guardando
               ? "bg-primaryMuted dark:bg-dark-primaryMuted"
               : "bg-primary dark:bg-dark-primary"
@@ -183,12 +190,10 @@ export default function RegisterPayment() {
             <ActivityIndicator color="#FFF" />
           ) : (
             <Text className="text-white text-[17px] font-extrabold tracking-wide">
-              Guardar→
+              Guardar
             </Text>
           )}
         </TouchableOpacity>
-
-        <View className="h-8" />
       </ScrollView>
     </SafeAreaView>
   );
