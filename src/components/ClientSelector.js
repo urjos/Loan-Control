@@ -45,7 +45,7 @@ export default function ClientSelector({ clients, selected, onChange }) {
           onRequestClose={() => setVisible(false)}
         >
           <TouchableOpacity
-            className="flex-1 bg-black/30"
+            className="flex-1 bg-black/70"
             activeOpacity={1}
             onPress={() => setVisible(false)}
           />
