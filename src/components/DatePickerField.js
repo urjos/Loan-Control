@@ -32,12 +32,13 @@ export default function DatePickerField({ label, value, onChange }) {
   // La fecha actual como objeto Date (para el picker)
   const fechaDate = value ? new Date(value + "T12:00:00") : new Date();
 
-  const handleChange = (event, selectedDate) => {
-    // Android cierra el diálogo solo; iOS necesita el modal
+  const handleValueChange = (event, selectedDate) => {
     if (Platform.OS === "android") setVisible(false);
-
-    if (event.type === "dismissed") return; // Usuario canceló
     if (selectedDate) onChange(toISODate(selectedDate));
+  };
+
+  const handleDismiss = () => {
+    if (Platform.OS === "android") setVisible(false);
   };
 
   const closeIOS = () => setVisible(false);
@@ -70,7 +71,8 @@ export default function DatePickerField({ label, value, onChange }) {
           value={fechaDate}
           mode="date"
           display="calendar"
-          onChange={handleChange}
+          onValueChange={handleValueChange}
+          onDismiss={handleDismiss}
           locale="es-PE"
           themeVariant={scheme === "dark" ? "dark" : "light"}
         />
@@ -107,7 +109,8 @@ export default function DatePickerField({ label, value, onChange }) {
               value={fechaDate}
               mode="date"
               display="inline" // Muestra un mini-calendario completo en iOS
-              onChange={handleChange}
+              onValueChange={handleValueChange}
+              onDismiss={handleDismiss}
               locale="es-PE"
               className="self-center"
               accentColor={scheme === "dark" ? "#2879fa" : "#2563EB"}

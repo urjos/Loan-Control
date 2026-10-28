@@ -120,7 +120,10 @@ export default function Historial({ navigation }) {
     (s, p) => s + parseFloat(p.monto || 0),
     0,
   );
-  const totalGlobal = payments.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+  const totalGlobal = payments.reduce(
+    (s, p) => s + parseFloat(p.monto || 0),
+    0,
+  );
 
   const contarPorCliente = (nombre) =>
     payments.filter((p) => p.cliente === nombre).length;
@@ -141,13 +144,14 @@ export default function Historial({ navigation }) {
     }
   };
 
-  const toggleOrden = () => setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
+  const toggleOrden = () =>
+    setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
 
   const renderItem = ({ item }) => {
     if (typeof item === "string") {
       return (
         <View className="self-center mt-2 mb-2 rounded-sm">
-          <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
+          <Text className="text-sm font-bold text-textMuted dark:text-dark-textMuted">
             {item}
           </Text>
         </View>
@@ -410,11 +414,14 @@ export default function Historial({ navigation }) {
           }
           mode="date"
           display="calendar"
-          onChange={(event, selectedDate) => {
+          onValueChange={(event, selectedDate) => {
             setMostrarCalendario(false);
-            if (event.type !== "dismissed" && selectedDate) {
+            if (selectedDate) {
               setFechaBusqueda(toLocalISOString(selectedDate));
             }
+          }}
+          onDismiss={() => {
+            setMostrarCalendario(false);
           }}
           themeVariant={isDark ? "dark" : "light"}
         />
@@ -453,10 +460,13 @@ export default function Historial({ navigation }) {
               }
               mode="date"
               display="inline"
-              onChange={(event, selectedDate) => {
+              onValueChange={(event, selectedDate) => {
                 if (selectedDate) {
                   setFechaBusqueda(toLocalISOString(selectedDate));
                 }
+              }}
+              onDismiss={() => {
+                setMostrarCalendario(false);
               }}
               accentColor="#2563EB"
               themeVariant={isDark ? "dark" : "light"}
