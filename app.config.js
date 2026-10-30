@@ -21,7 +21,7 @@ export default ({ config }) => {
     ...config,
     name: "Control Prestamos",
     slug: "ControlPrestamos",
-    version: "3.0.0",
+    version: "4.0.0",
     updates: {
       url: "https://u.expo.dev/a5bb2cdb-423f-421b-b813-91635032e9e2",
     },
@@ -41,7 +41,7 @@ export default ({ config }) => {
       supportsTablet: true,
     },
     android: {
-      versionCode: 5,
+      versionCode: 6,
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#ffffff",
@@ -54,6 +54,10 @@ export default ({ config }) => {
     },
     plugins: [
       "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        { android: { enableMinifyInReleaseBuilds: false } },
+      ],
       [
         "react-native-android-widget",
         {

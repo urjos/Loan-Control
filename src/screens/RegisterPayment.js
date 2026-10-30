@@ -136,6 +136,7 @@ export default function RegisterPayment() {
               />
             </View>
           </View>
+
           <View className="gap-4">
             {/* ── Sección: Método de Pago ── */}
             <Text className="font-extrabold text-md text-text dark:text-dark-text">
@@ -189,7 +190,7 @@ export default function RegisterPayment() {
           {isSaving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text className="text-white text-[17px] font-extrabold tracking-wide">
+            <Text className="text-lg font-extrabold tracking-wide text-white">
               Guardar
             </Text>
           )}

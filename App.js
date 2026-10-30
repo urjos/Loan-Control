@@ -1,7 +1,14 @@
 import "./global.css";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
-import { Platform, Text, useColorScheme, Appearance, AppState } from "react-native";
+import {
+  Platform,
+  Text,
+  useColorScheme,
+  Appearance,
+  AppState,
+  LogBox,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   NavigationContainer,
@@ -22,6 +29,10 @@ import { refreshCalendarWidget } from "./src/widgets/updateWidget";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+LogBox.ignoreLogs([
+  "ImageBackground is deprecated",
+]);
 
 function MainTabs() {
   const themeColors = useAppTheme();
