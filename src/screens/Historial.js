@@ -377,6 +377,7 @@ export default function Historial({ navigation }) {
         </View>
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={datosParaFlatList}
           keyExtractor={(item, i) =>
             typeof item === "string" ? `header-${item}` : String(item.id ?? i)
