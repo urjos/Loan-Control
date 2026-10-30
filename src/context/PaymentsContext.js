@@ -27,6 +27,7 @@ export function PaymentsProvider({ children }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const syncingRef = useRef(false);
+  const needsResyncRef = useRef(false);
   const lastFetchTime = useRef(0);
 
   useEffect(() => {
@@ -41,53 +42,51 @@ export function PaymentsProvider({ children }) {
 
   const syncOfflinePayments = useCallback(async () => {
     if (syncingRef.current) {
-      console.log("Sincronización ya en progreso, omitiendo nueva ejecución.");
+      needsResyncRef.current = true; // se pidió otra sync mientras corría una: repetir al terminar
       return;
     }
 
     syncingRef.current = true;
     setIsSyncing(true);
+    let algoSincronizado = false;
 
     try {
-      const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
-      let queue = queueStr ? JSON.parse(queueStr) : [];
+      do {
+        needsResyncRef.current = false;
 
-      if (queue.length === 0) {
-        syncingRef.current = false;
-        setIsSyncing(false);
-        return;
-      }
+        const queueStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
+        const queue = queueStr ? JSON.parse(queueStr) : [];
+        if (queue.length === 0) break;
 
-      console.log(
-        `Iniciando sincronización de ${queue.length} pagos pendientes.`,
-      );
-
-      const failedPayments = [];
-      for (const pago of queue) {
-        try {
-          const { id: idLocal, isPending, ...pagoData } = pago;
-          const idPermanente = idLocal.startsWith("offline_")
-            ? generateId()
-            : idLocal;
-
-          await api.createPayment({ ...pagoData, id: idPermanente });
-          console.log(
-            `Pago ${idLocal} sincronizado con éxito como ${idPermanente}.`,
-          );
-        } catch (error) {
-          console.error(
-            `Error al sincronizar pago ${pago.id}, se mantendrá en la cola.`,
-            error,
-          );
-          failedPayments.push(pago);
+        const syncedIds = new Set();
+        for (const payment of queue) {
+          try {
+            const { id, isPending, ...paymentData } = payment;
+            const idPermanente = id.startsWith("offline_")
+              ? `P_${id.slice(8)}`
+              : id;
+            await api.createPayment({ ...paymentData, id: idPermanente });
+            syncedIds.add(id);
+          } catch (error) {
+            console.error(
+              `Error al sincronizar payment ${payment.id}:`,
+              error?.message ?? error,
+            );
+          }
         }
-      }
 
-      await AsyncStorage.setItem(
-        OFFLINE_QUEUE_KEY,
-        JSON.stringify(failedPayments),
-      );
-      await fetchPayments();
+        const latestStr = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
+        const latest = latestStr ? JSON.parse(latestStr) : [];
+        await AsyncStorage.setItem(
+          OFFLINE_QUEUE_KEY,
+          JSON.stringify(latest.filter((p) => !syncedIds.has(p.id))),
+        );
+
+        if (syncedIds.size === 0) break;
+        algoSincronizado = true;
+      } while (needsResyncRef.current);
+
+      if (algoSincronizado) await fetchPayments({ force: true });
     } catch (error) {
       console.error("Error durante el proceso de sincronización:", error);
     } finally {
