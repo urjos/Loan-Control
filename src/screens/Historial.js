@@ -17,8 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import PaymentCard from "../components/PaymentCard";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { usePagos } from "../context/PaymentsContext";
-import { CLIENTES, MONEDA } from "../config/constants";
+import { usePayments } from "../context/PaymentsContext";
+import { CLIENTS, CURRENCY } from "../config/constants";
 
 const toLocalISOString = (date) => {
   const y = date.getFullYear();
@@ -28,32 +28,32 @@ const toLocalISOString = (date) => {
 };
 
 export default function Historial({ navigation }) {
-  const { pagos, cargando, sincronizando, fetchPagos, eliminarPago } =
-    usePagos();
+  const { payments, isLoading, isSyncing, fetchPayments, deletePayment } =
+    usePayments();
 
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
-  const [filtro, setFiltro] = useState("Todos");
-  const [orden, setOrden] = useState("desc");
-  const [busqueda, setBusqueda] = useState("");
-  const [tipoBusqueda, setTipoBusqueda] = useState("monto");
-  const [metodoSeleccionado, setMetodoSeleccionado] = useState("");
+  const [filter, setFilter] = useState("Todos");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("monto");
+  const [selectedMethod, setSelectedMethod] = useState("");
   const [mostrarMetodosBox, setMostrarMetodosBox] = useState(false);
   const [fechaBusqueda, setFechaBusqueda] = useState("");
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [actualizando, setActualizando] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      fetchPagos();
-    }, [fetchPagos]),
+      fetchPayments();
+    }, [fetchPayments]),
   );
 
   const onRefresh = async () => {
-    setActualizando(true);
-    await fetchPagos({ force: true });
-    setActualizando(false);
+    setIsRefreshing(true);
+    await fetchPayments({ force: true });
+    setIsRefreshing(false);
   };
 
   const obtenerNombreFecha = (fechaString) => {
@@ -90,14 +90,14 @@ export default function Historial({ navigation }) {
     return grupos;
   };
 
-  const pagosFiltrados = pagos
-    .filter((p) => filtro === "Todos" || p.cliente === filtro)
+  const pagosFiltrados = payments
+    .filter((p) => filter === "Todos" || p.cliente === filter)
     .filter((p) => {
-      if (tipoBusqueda === "monto" && busqueda.trim()) {
-        return String(p.monto).includes(busqueda.trim());
+      if (searchType === "monto" && searchQuery.trim()) {
+        return String(p.monto).includes(searchQuery.trim());
       }
-      if (tipoBusqueda === "metodo" && metodoSeleccionado) {
-        return p.metodo === metodoSeleccionado;
+      if (searchType === "metodo" && selectedMethod) {
+        return p.metodo === selectedMethod;
       }
       return true;
     })
@@ -106,12 +106,12 @@ export default function Historial({ navigation }) {
       return p.fecha === fechaBusqueda;
     })
     .sort((a, b) => {
-      if (a.fecha > b.fecha) return orden === "asc" ? 1 : -1;
-      if (a.fecha < b.fecha) return orden === "asc" ? -1 : 1;
+      if (a.fecha > b.fecha) return sortOrder === "asc" ? 1 : -1;
+      if (a.fecha < b.fecha) return sortOrder === "asc" ? -1 : 1;
 
       const timeA = parseInt(String(a.id).replace("P_", "")) || 0;
       const timeB = parseInt(String(b.id).replace("P_", "")) || 0;
-      return orden === "asc" ? timeA - timeB : timeB - timeA;
+      return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
     });
 
   const datosAgrupados = agruparPagosPorFecha(pagosFiltrados);
@@ -120,10 +120,13 @@ export default function Historial({ navigation }) {
     (s, p) => s + parseFloat(p.monto || 0),
     0,
   );
-  const totalGlobal = pagos.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+  const totalGlobal = payments.reduce(
+    (s, p) => s + parseFloat(p.monto || 0),
+    0,
+  );
 
   const contarPorCliente = (nombre) =>
-    pagos.filter((p) => p.cliente === nombre).length;
+    payments.filter((p) => p.cliente === nombre).length;
 
   // ── Handlers ──────────────────────────────────────────────────
 
@@ -131,8 +134,8 @@ export default function Historial({ navigation }) {
     navigation.navigate("EditarPago", { pago });
   };
 
-  const handleEliminar = async (id) => {
-    const result = await eliminarPago(id);
+  const handleDelete = async (id) => {
+    const result = await deletePayment(id);
     if (!result.ok) {
       Alert.alert(
         "Error al Eliminar",
@@ -141,13 +144,14 @@ export default function Historial({ navigation }) {
     }
   };
 
-  const toggleOrden = () => setOrden((o) => (o === "desc" ? "asc" : "desc"));
+  const toggleOrden = () =>
+    setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
 
   const renderItem = ({ item }) => {
     if (typeof item === "string") {
       return (
         <View className="self-center mt-2 mb-2 rounded-sm">
-          <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
+          <Text className="text-sm font-bold text-textMuted dark:text-dark-textMuted">
             {item}
           </Text>
         </View>
@@ -158,9 +162,9 @@ export default function Historial({ navigation }) {
 
     return (
       <PaymentCard
-        pago={item}
-        onEditar={handleEditar}
-        onEliminar={handleEliminar}
+        payment={item}
+        onEdit={handleEditar}
+        onDelete={handleDelete}
         isPending={isPending}
       />
     );
@@ -184,11 +188,11 @@ export default function Historial({ navigation }) {
             Historial
           </Text>
           <Text className="text-sm text-textMuted dark:text-dark-textMuted">
-            {pagos.length}{" "}
-            {pagos.length === 1 ? "pago registrado" : "pagos registrados"}
+            {payments.length}{" "}
+            {payments.length === 1 ? "pago registrado" : "pagos registrados"}
           </Text>
         </View>
-        {sincronizando && (
+        {isSyncing && (
           <View className="flex-row gap-2 items-center px-4">
             <ActivityIndicator color="#2563EB" size="small" />
             <Text className="text-xs font-bold text-textMuted dark:text-dark-textMuted">
@@ -203,15 +207,15 @@ export default function Historial({ navigation }) {
         <View className="flex-row items-center p-4 rounded-lg shadow-md bg-primary dark:bg-dark-primary">
           <View className="flex-1">
             <Text className="mb-1 text-xs font-bold text-blue-200">
-              {filtro === "Todos" ? "Total cobrado" : `Total de ${filtro}`}
+              {filter === "Todos" ? "Total cobrado" : `Total de ${filter}`}
             </Text>
             <Text className="text-white text-[26px] font-extrabold">
-              {MONEDA}{" "}
+              {CURRENCY}{" "}
               {totalFiltrado.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
             </Text>
           </View>
 
-          {filtro !== "Todos" && (
+          {filter !== "Todos" && (
             <>
               <View className="w-[1px] h-11 bg-white/30 mx-4" />
               <View className="flex-1">
@@ -219,7 +223,7 @@ export default function Historial({ navigation }) {
                   Total global
                 </Text>
                 <Text className="text-blue-300 text-[26px] font-extrabold">
-                  {MONEDA}{" "}
+                  {CURRENCY}{" "}
                   {totalGlobal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </Text>
               </View>
@@ -233,27 +237,27 @@ export default function Historial({ navigation }) {
           <View className="flex-1 flex-row items-center bg-surface dark:bg-dark-surface px-2 h-12 rounded-md border-[1.5px] border-border dark:border-dark-border">
             <TouchableOpacity
               onPress={() => {
-                setTipoBusqueda((t) => (t === "monto" ? "metodo" : "monto"));
-                setBusqueda("");
-                setMetodoSeleccionado("");
+                setSearchType((t) => (t === "monto" ? "metodo" : "monto"));
+                setSearchQuery("");
+                setSelectedMethod("");
               }}
               className="p-1 mr-1"
             >
               <MaterialIcons
-                name={tipoBusqueda === "monto" ? "attach-money" : "credit-card"}
+                name={searchType === "monto" ? "attach-money" : "credit-card"}
                 size={20}
                 color="#2563EB"
               />
             </TouchableOpacity>
 
-            {tipoBusqueda === "monto" ? (
+            {searchType === "monto" ? (
               <TextInput
                 className="flex-1 justify-center h-full text-md text-text dark:text-dark-text"
                 placeholder="Buscar monto..."
                 placeholderTextColor="#94A3B8"
                 keyboardType="numeric"
-                value={busqueda}
-                onChangeText={(t) => setBusqueda(t.replace(/[^0-9.]/g, ""))}
+                value={searchQuery}
+                onChangeText={(t) => setSearchQuery(t.replace(/[^0-9.]/g, ""))}
               />
             ) : (
               <TouchableOpacity
@@ -262,17 +266,17 @@ export default function Historial({ navigation }) {
               >
                 <Text
                   className={`text-md ${
-                    metodoSeleccionado
+                    selectedMethod
                       ? "text-text dark:text-dark-text"
                       : "text-[#94A3B8]"
                   }`}
                 >
-                  {metodoSeleccionado || "Elegir método..."}
+                  {selectedMethod || "Elegir método..."}
                 </Text>
               </TouchableOpacity>
             )}
 
-            {(busqueda !== "" || metodoSeleccionado !== "") && (
+            {(searchQuery !== "" || selectedMethod !== "") && (
               <TouchableOpacity
                 onPress={() => {
                   setBusqueda("");
@@ -307,7 +311,7 @@ export default function Historial({ navigation }) {
             onPress={toggleOrden}
           >
             <AntDesign
-              name={orden === "desc" ? "arrow-down" : "arrow-up"}
+              name={sortOrder === "desc" ? "arrow-down" : "arrow-up"}
               size={20}
               color={isDark ? "#94A3B8" : "#64748B"}
             />
@@ -334,13 +338,13 @@ export default function Historial({ navigation }) {
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={["Todos", ...CLIENTES]}
+            data={["Todos", ...CLIENTS]}
             keyExtractor={(item) => item}
             contentContainerClassName="gap-2 flex-row"
             renderItem={({ item }) => {
-              const activo = filtro === item;
+              const activo = filter === item;
               const count =
-                item === "Todos" ? pagos.length : contarPorCliente(item);
+                item === "Todos" ? payments.length : contarPorCliente(item);
               return (
                 <TouchableOpacity
                   className={`px-4 py-1.5 rounded-sm border-[1.5px] ${
@@ -348,7 +352,7 @@ export default function Historial({ navigation }) {
                       ? "bg-primary border-primary dark:bg-dark-primary dark:border-dark-primary"
                       : "bg-divider dark:bg-dark-divider border-border dark:border-dark-border"
                   }`}
-                  onPress={() => setFiltro(item)}
+                  onPress={() => setFilter(item)}
                 >
                   <Text
                     className={`text-[13px] font-bold ${
@@ -367,12 +371,13 @@ export default function Historial({ navigation }) {
       </View>
 
       {/* ── Lista de pagos ── */}
-      {cargando && !actualizando ? (
+      {isLoading && !isRefreshing ? (
         <View className="flex-1 gap-2 justify-center items-center">
           <ActivityIndicator size="large" color="#2563EB" />
         </View>
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={datosParaFlatList}
           keyExtractor={(item, i) =>
             typeof item === "string" ? `header-${item}` : String(item.id ?? i)
@@ -380,7 +385,7 @@ export default function Historial({ navigation }) {
           contentContainerClassName="pb-8"
           refreshControl={
             <RefreshControl
-              refreshing={actualizando}
+              refreshing={isRefreshing}
               onRefresh={onRefresh}
               colors={["#2563EB"]}
               tintColor="#2563EB"
@@ -393,8 +398,8 @@ export default function Historial({ navigation }) {
                 Sin pagos registrados
               </Text>
               <Text className="text-[13px] text-textLight dark:text-dark-textLight text-center mt-1">
-                {filtro !== "Todos"
-                  ? `${filtro} no tiene pagos aún.`
+                {filter !== "Todos"
+                  ? `${filter} no tiene pagos aún.`
                   : 'Ve a "Registrar Pago" para agregar el primero.'}
               </Text>
             </View>
@@ -410,11 +415,14 @@ export default function Historial({ navigation }) {
           }
           mode="date"
           display="calendar"
-          onChange={(event, selectedDate) => {
+          onValueChange={(event, selectedDate) => {
             setMostrarCalendario(false);
-            if (event.type !== "dismissed" && selectedDate) {
+            if (selectedDate) {
               setFechaBusqueda(toLocalISOString(selectedDate));
             }
+          }}
+          onDismiss={() => {
+            setMostrarCalendario(false);
           }}
           themeVariant={isDark ? "dark" : "light"}
         />
@@ -453,10 +461,13 @@ export default function Historial({ navigation }) {
               }
               mode="date"
               display="inline"
-              onChange={(event, selectedDate) => {
+              onValueChange={(event, selectedDate) => {
                 if (selectedDate) {
                   setFechaBusqueda(toLocalISOString(selectedDate));
                 }
+              }}
+              onDismiss={() => {
+                setMostrarCalendario(false);
               }}
               accentColor="#2563EB"
               themeVariant={isDark ? "dark" : "light"}
@@ -482,7 +493,7 @@ export default function Historial({ navigation }) {
                 key={m}
                 className="py-4 border-t border-border dark:border-dark-border"
                 onPress={() => {
-                  setMetodoSeleccionado(m);
+                  setSelectedMethod(m);
                   setMostrarMetodosBox(false);
                 }}
               >

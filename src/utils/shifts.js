@@ -1,13 +1,13 @@
-// Lógica compartida de los turnos de limpieza.
-// Se usa tanto en la app (DishwashingCalendar) como en el widget de Android.
+// Shared cleaning shift logic.
+// Used in both the app (DishwashingCalendar) and the Android widget.
 
 export const MY_NAME = "Josué";
 export const BROTHER_NAME = "David";
 
-// Día en el que arranca el ciclo de 4 días (2 días cada uno).
+// Day on which the 4-day cycle starts (2 days each).
 export const CYCLE_START_DATE = new Date("2024-01-01T00:00:00");
 
-// Diferencia en días usando UTC para evitar problemas de horario de verano.
+// Difference in days using UTC to avoid daylight saving issues.
 export const getDayDifference = (date1, date2) => {
   const date1UTC = Date.UTC(
     date1.getFullYear(),
@@ -22,7 +22,7 @@ export const getDayDifference = (date1, date2) => {
   return Math.floor((date1UTC - date2UTC) / (1000 * 60 * 60 * 24));
 };
 
-// Posición dentro del ciclo de 4 días: 0 y 1 = Josué, 2 y 3 = David.
+// Position within the 4-day cycle: 0 and 1 = Josué, 2 and 3 = David.
 export const getCyclePosition = (date) => {
   const dayDiff = getDayDifference(date, CYCLE_START_DATE);
   return ((dayDiff % 4) + 4) % 4;
@@ -38,7 +38,7 @@ export const getAssigneeName = (date) =>
 
 export const getTodayAssignee = () => getAssigneeName(new Date());
 
-// Fecha local en formato YYYY-MM-DD (para claves de guardado diario).
+// Local date in YYYY-MM-DD format (for daily save keys).
 export const toLocalDateString = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");

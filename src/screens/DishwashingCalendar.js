@@ -17,7 +17,7 @@ import {
   getCyclePosition,
   getTodayAssignee,
   toLocalDateString,
-} from "../utils/turnos";
+} from "../utils/shifts";
 
 LocaleConfig.locales["es"] = {
   monthNames: [

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function ClienteSelector({ clientes, seleccionado, onChange }) {
+export default function ClientSelector({ clients, selected, onChange }) {
   const [visible, setVisible] = useState(false);
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
@@ -28,7 +28,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
           style={{ marginRight: 8 }}
         />
         <Text className="flex-1 text-base font-bold text-text dark:text-dark-text">
-          {seleccionado}
+          {selected}
         </Text>
         <MaterialIcons
           name="arrow-drop-down"
@@ -45,7 +45,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
           onRequestClose={() => setVisible(false)}
         >
           <TouchableOpacity
-            className="flex-1 bg-black/30"
+            className="flex-1 bg-black/70"
             activeOpacity={1}
             onPress={() => setVisible(false)}
           />
@@ -54,7 +54,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
               Selecciona un cliente
             </Text>
             <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-              {clientes.map((c) => (
+              {clients.map((c) => (
                 <TouchableOpacity
                   key={c}
                   className="py-4 border-t border-border dark:border-dark-border"
@@ -66,7 +66,7 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
                 >
                   <Text
                     className={`text-[15px] text-center ${
-                      seleccionado === c
+                      selected === c
                         ? "font-bold text-primary dark:text-dark-primary"
                         : "text-text dark:text-dark-text"
                     }`}
@@ -82,4 +82,3 @@ export default function ClienteSelector({ clientes, seleccionado, onChange }) {
     </View>
   );
 }
-
